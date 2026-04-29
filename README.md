@@ -9,6 +9,38 @@ Türkiye'deki araç sahiplerinin muayene, sigorta, kasko ve bakım tarihlerini k
 - Sigorta teklif ekranı (affiliate link)
 - Tüm veriler cihazda, backend yok
 
+## Uygulama Görselleri
+
+<div align="center">
+  <h3>Ana Sayfa (Dashboard)</h3>
+  <img src="screenshoots/dashboard.png" width="300" alt="Ana Sayfa">
+  <p><i>Araç listenizi ve yaklaşan kritik tarihleri tek bakışta görün.</i></p>
+
+  <br>
+
+  <h3>Araç Detayları</h3>
+  <img src="screenshoots/detail.png" width="300" alt="Araç Detay">
+  <p><i>Muayene, sigorta ve bakım detaylarını inceleyin, aksiyon alın.</i></p>
+
+  <br>
+
+  <h3>Yeni Araç Ekleme</h3>
+  <img src="screenshoots/add_vehicle.png" width="300" alt="Araç Ekleme">
+  <p><i>Kolay ve hızlı bir şekilde yeni aracınızı sisteme dahil edin.</i></p>
+
+  <br>
+
+  <h3>Raporlar ve Analiz</h3>
+  <img src="screenshoots/reports.png" width="300" alt="Raporlar">
+  <p><i>Harcama analizi ve tasarruf istatistiklerinizi takip edin.</i></p>
+
+  <br>
+
+  <h3>Ayarlar</h3>
+  <img src="screenshoots/settings.png" width="300" alt="Ayarlar">
+  <p><i>Bildirim ve uygulama tercihlerini kişiselleştirin.</i></p>
+</div>
+
 ## Teknoloji Yığını
 - React Native 0.73+ (Expo SDK 50+)
 - TypeScript
