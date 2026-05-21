@@ -61,7 +61,8 @@ export const AraclarProvider = ({ children }: PropsWithChildren) => {
       const [kayitlar, saat] = await Promise.all([getAraclar(), getVarsayilanBildirimSaati()]);
       setAraclar(kayitlar);
       setVarsayilanSaatState(saat);
-      await bildirimleriYenile(kayitlar);
+      // Bildirimleri senkronize etmeyi beklemeden arka planda çalıştırarak yükleme süresini hızlandırıyoruz
+      bildirimleriYenile(kayitlar).catch(console.error);
     } finally {
       setYukleniyor(false);
       setYenileniyor(false);

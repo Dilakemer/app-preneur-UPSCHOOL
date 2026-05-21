@@ -22,6 +22,7 @@ export interface Arac {
   bildirimler: Bildirimler;
   olusturmaTarihi: string;
   guncellemeTarihi: string;
+  kullaniciEposta?: string;
 }
 
 export type AracInput = Omit<Arac, 'id' | 'olusturmaTarihi' | 'guncellemeTarihi'>;

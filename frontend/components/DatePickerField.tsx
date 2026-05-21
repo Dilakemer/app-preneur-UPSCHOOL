@@ -84,6 +84,8 @@ export const DatePickerField = ({
             display={Platform.OS === 'ios' ? 'spinner' : 'default'}
             is24Hour
             onChange={handleChange}
+            themeVariant="dark"
+            textColor={renkler.metin}
           />
           {Platform.OS === 'ios' ? (
             <Pressable onPress={() => setGorunur(false)} style={styles.tamamButonu}>
@@ -116,7 +118,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   girdi: {
-    backgroundColor: renkler.beyaz,
+    backgroundColor: renkler.arkaPlanKoyu,
     borderRadius: 18,
     borderWidth: 1,
     borderColor: renkler.cizgi,
@@ -131,7 +133,7 @@ const styles = StyleSheet.create({
     color: renkler.metinIkincil,
   },
   pickerKutusu: {
-    backgroundColor: '#F9F3EA',
+    backgroundColor: renkler.arkaPlanKoyu,
     borderRadius: 18,
     borderWidth: 1,
     borderColor: renkler.cizgi,

@@ -199,7 +199,7 @@ caremind/
 - [ ] `main` → production, `develop` → geliştirme, `feature/*` → özellik branch stratejisi belirle
 - [ ] İlk commit: `feat: initial project setup`
 
-**✅ Milestone 0 → Proje TypeScript hatasız derleniyor, Sentry aktif, EAS yapılandırması hazır.**
+**✅ Milestone 0 → Proje TypeScript hatasız derleniyor, Sentry aktif, EAS yapılandırması hazır, Backend API ve AI entegrasyonu tamamlandı.**
 
 ---
 

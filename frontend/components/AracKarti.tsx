@@ -1,10 +1,10 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import type { Arac } from '../types/Arac';
 import { KATEGORI_BASLIKLARI } from '../types/Arac';
 import { enYakinTarihBul, kalanGunMetni, tarihFormatla } from '../utils/tarihHesapla';
 import { durumRengiBelirle } from '../utils/renkBelirle';
-import { RenkGostergesi } from './RenkGostergesi';
 import { renkler } from '../constants/renkler';
 
 interface AracKartiProps {
@@ -16,33 +16,49 @@ export const AracKarti = ({ arac, onPress }: AracKartiProps) => {
   const enYakin = enYakinTarihBul(arac);
   const durum = enYakin ? durumRengiBelirle(enYakin.kalanGun) : 'neutral';
 
+  const getDurumRengi = (durum: string) => {
+    switch (durum) {
+      case 'acil': return renkler.kirmizi;
+      case 'yaklasiyor': return renkler.sari;
+      case 'rahat': return renkler.yesil;
+      default: return renkler.cizgi;
+    }
+  };
+
+  const gostergeRengi = getDurumRengi(durum);
+
   return (
     <Pressable onPress={onPress} style={styles.kapsayici}>
-      <RenkGostergesi durum={durum} />
-
+      <View style={[styles.durumCizgisi, { backgroundColor: gostergeRengi }]} />
+      
       <View style={styles.icerik}>
         <View style={styles.ustAlan}>
           <View style={styles.metinler}>
             <Text style={styles.baslik}>
-              {[arac.marka, arac.model].filter(Boolean).join(' ')} ({arac.yil})
+              {[arac.marka, arac.model].filter(Boolean).join(' ')} <Text style={styles.yilText}>({arac.yil})</Text>
             </Text>
-            <Text style={styles.altBaslik}>
-              {enYakin
-                ? `${KATEGORI_BASLIKLARI[enYakin.kategori]}: ${tarihFormatla(enYakin.tarih)}`
-                : 'Takvim tarihi eklenmedi'}
-            </Text>
-          </View>
-
-          <View style={styles.plakaRozeti}>
-            <Text style={styles.plakaMetni}>{arac.plaka}</Text>
+            <View style={styles.plakaRozeti}>
+              <Feather name="hash" size={14} color={renkler.vurgu} />
+              <Text style={styles.plakaMetni}>{arac.plaka}</Text>
+            </View>
           </View>
         </View>
 
         <View style={styles.altAlan}>
-          <Text style={styles.kalanGun}>
-            {enYakin ? kalanGunMetni(enYakin.kalanGun) : 'Tarih ekleyerek takibi ac'}
-          </Text>
-          <Text style={styles.detay}>Detaylar</Text>
+          <View style={styles.bilgiKutusu}>
+            <Feather name="calendar" size={16} color={renkler.metinIkincil} style={{ marginRight: 6 }} />
+            <Text style={styles.altBaslik}>
+              {enYakin
+                ? `${KATEGORI_BASLIKLARI[enYakin.kategori]}: ${tarihFormatla(enYakin.tarih)}`
+                : 'Tarih eklenmedi'}
+            </Text>
+          </View>
+          
+          <View style={[styles.durumRozeti, { backgroundColor: gostergeRengi + '20' }]}>
+            <Text style={[styles.kalanGun, { color: durum === 'neutral' ? renkler.metinIkincil : gostergeRengi }]}>
+              {enYakin ? kalanGunMetni(enYakin.kalanGun) : 'Takip Et'}
+            </Text>
+          </View>
         </View>
       </View>
     </Pressable>
@@ -52,63 +68,84 @@ export const AracKarti = ({ arac, onPress }: AracKartiProps) => {
 const styles = StyleSheet.create({
   kapsayici: {
     flexDirection: 'row',
-    gap: 14,
     backgroundColor: renkler.kart,
-    borderRadius: 26,
-    padding: 18,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: renkler.cizgi,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 4,
+    overflow: 'hidden',
+  },
+  durumCizgisi: {
+    width: 6,
+    height: '100%',
   },
   icerik: {
     flex: 1,
+    padding: 18,
     gap: 16,
   },
   ustAlan: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: 16,
+    alignItems: 'center',
   },
   metinler: {
     flex: 1,
-    gap: 6,
+    gap: 8,
   },
   baslik: {
     color: renkler.metin,
-    fontSize: 21,
-    lineHeight: 25,
-    fontFamily: 'Georgia',
+    fontSize: 20,
+    fontWeight: '800',
+    letterSpacing: -0.5,
   },
-  altBaslik: {
+  yilText: {
     color: renkler.metinIkincil,
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 18,
+    fontWeight: '500',
   },
   plakaRozeti: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: renkler.vurguSoluk,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     alignSelf: 'flex-start',
-    backgroundColor: renkler.arkaPlanKoyu,
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
   },
   plakaMetni: {
-    color: renkler.beyaz,
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0.8,
+    color: renkler.vurgu,
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: 1,
+    marginLeft: 4,
   },
   altAlan: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 12,
+    marginTop: 4,
+  },
+  bilgiKutusu: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  altBaslik: {
+    color: renkler.metinIkincil,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  durumRozeti: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
   },
   kalanGun: {
-    color: renkler.metin,
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  detay: {
-    color: renkler.vurgu,
     fontSize: 13,
     fontWeight: '700',
   },

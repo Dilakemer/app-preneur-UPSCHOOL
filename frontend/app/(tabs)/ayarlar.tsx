@@ -4,6 +4,7 @@ import { DatePickerField } from '../../components/DatePickerField';
 import { renkler } from '../../constants/renkler';
 import { useAraclar } from '../../hooks/useAraclar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Feather } from '@expo/vector-icons';
 
 export default function AyarlarScreen() {
   const { varsayilanBildirimSaati, varsayilanSaatiGuncelle, tumVerileriSil } = useAraclar();
@@ -51,23 +52,39 @@ export default function AyarlarScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Ayarlar</Text>
+      <Text style={styles.subtitle}>Tercihlerinizi yönetin.</Text>
 
-      <View style={styles.row}>
-        <Text style={styles.label}>Bildirimleri etkinleştir</Text>
-        <Switch
-          value={notificationsEnabled}
-          onValueChange={toggleNotifications}
-          thumbColor={renkler.beyaz}
-          trackColor={{ false: '#CABEB1', true: renkler.vurgu }}
-        />
+      <View style={styles.sectionBlock}>
+        <View style={styles.row}>
+          <View style={styles.rowLeft}>
+            <Feather name="bell" size={20} color={renkler.vurgu} style={{ marginRight: 12 }} />
+            <Text style={styles.label}>Bildirimleri Etkinleştir</Text>
+          </View>
+          <Switch
+            value={notificationsEnabled}
+            onValueChange={toggleNotifications}
+            thumbColor={renkler.beyaz}
+            trackColor={{ false: renkler.arkaPlanKoyu, true: renkler.vurgu }}
+          />
+        </View>
+
+        <View style={styles.divider} />
+
+        <View style={styles.section}>
+          <View style={styles.rowLeft}>
+            <Feather name="clock" size={20} color={renkler.mavi} style={{ marginRight: 12 }} />
+            <Text style={styles.label}>Varsayılan Bildirim Saati</Text>
+          </View>
+          <View style={{ marginTop: 12 }}>
+            <DatePickerField label="" mode="time" value={bildirimSaati} onChange={handleSaatChange} clearable={false} />
+          </View>
+        </View>
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.label}>Varsayılan bildirim saati</Text>
-        <DatePickerField label="Bildirim saati" mode="time" value={bildirimSaati} onChange={handleSaatChange} clearable={false} />
-      </View>
+      <View style={{ flex: 1 }} />
 
       <Pressable style={styles.clearButton} onPress={handleClear}>
+        <Feather name="trash-2" size={18} color="#EF4444" style={{ marginRight: 8 }} />
         <Text style={styles.clearText}>Tüm verileri sil</Text>
       </Pressable>
     </View>
@@ -75,11 +92,36 @@ export default function AyarlarScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20 },
-  title: { fontSize: 22, fontWeight: '700', marginBottom: 16 },
-  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
-  label: { fontSize: 16, color: renkler.metin },
-  section: { marginTop: 12, marginBottom: 24 },
-  clearButton: { padding: 14, borderRadius: 12, backgroundColor: '#FFF3F3', alignItems: 'center' },
-  clearText: { color: '#C33', fontWeight: '700' },
+  container: { flex: 1, padding: 20, backgroundColor: renkler.arkaPlan },
+  title: { fontSize: 26, fontWeight: '800', color: renkler.metin, letterSpacing: -0.5 },
+  subtitle: { fontSize: 16, color: renkler.metinIkincil, marginBottom: 24, marginTop: 4 },
+  sectionBlock: {
+    backgroundColor: renkler.kart,
+    borderRadius: 20,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: renkler.cizgi,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  rowLeft: { flexDirection: 'row', alignItems: 'center' },
+  label: { fontSize: 16, fontWeight: '600', color: renkler.metin },
+  divider: { height: 1, backgroundColor: renkler.cizgi, marginVertical: 20 },
+  section: {},
+  clearButton: { 
+    flexDirection: 'row',
+    padding: 16, 
+    borderRadius: 16, 
+    backgroundColor: 'rgba(239, 68, 68, 0.1)', 
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20
+  },
+  clearText: { color: '#EF4444', fontWeight: '700', fontSize: 16 },
 });

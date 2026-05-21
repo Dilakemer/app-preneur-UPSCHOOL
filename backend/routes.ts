@@ -11,165 +11,124 @@ import {
   getAracByPlaka,
   generateBildirimRaporu,
 } from './database';
-import { asyncHandler, validateAracInput, validateSaat } from './middleware';
-import type { ApiResponse, Arac, AracInput } from './types';
+import { getAIAdvice, onbellekTemizle, aiDurumRaporu, type AIPromptTipi } from './aiService';
+import { asyncHandler, validateAracInput } from './middleware';
+import { successResponse, errorResponse, getClientIP } from './apiLayer';
+import type { Arac, AracInput } from './types';
 
 const router = Router();
+const ADMIN_API_KEY = process.env.ADMIN_API_KEY;
+
+const adminYetkiliMi = (req: Request) => {
+  const headerKey = req.headers['x-admin-api-key'];
+  const authHeader = req.headers.authorization;
+  const bearerKey = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : undefined;
+  const gelenAnahtar = typeof headerKey === 'string' ? headerKey : bearerKey;
+
+  return Boolean(ADMIN_API_KEY && gelenAnahtar && gelenAnahtar === ADMIN_API_KEY);
+};
 
 // ============ ARAÇLAR API ============
 
 // GET /api/araclar - Tüm araçları getir
 router.get('/araclar', asyncHandler(async (req: Request, res: Response) => {
-  const araclar = getAllAraclar();
-  res.json({
-    success: true,
-    data: araclar,
-    message: `${araclar.length} araç bulundu`,
-  } as ApiResponse<Arac[]>);
+  const eposta = req.headers['x-user-email'] as string | undefined;
+  const araclar = getAllAraclar(eposta);
+  return successResponse(res, araclar, `${araclar.length} araç bulundu`);
 }));
 
 // GET /api/araclar/:id - ID ile araç getir
 router.get('/araclar/:id', asyncHandler(async (req: Request, res: Response) => {
-  const arac = getAracById(req.params.id);
+  const eposta = req.headers['x-user-email'] as string | undefined;
+  const arac = getAracById(req.params.id, eposta);
 
   if (!arac) {
-    return res.status(404).json({
-      success: false,
-      error: 'Araç bulunamadı',
-    } as ApiResponse<null>);
+    return errorResponse(res, 'Araç bulunamadı', 404);
   }
 
-  res.json({
-    success: true,
-    data: arac,
-  } as ApiResponse<Arac>);
+  return successResponse(res, arac);
 }));
 
 // GET /api/araclar/plaka/:plaka - Plaka ile araç getir
 router.get('/araclar/plaka/:plaka', asyncHandler(async (req: Request, res: Response) => {
-  const arac = getAracByPlaka(req.params.plaka);
+  const eposta = req.headers['x-user-email'] as string | undefined;
+  const arac = getAracByPlaka(req.params.plaka, eposta);
 
   if (!arac) {
-    return res.status(404).json({
-      success: false,
-      error: 'Araç bulunamadı',
-    } as ApiResponse<null>);
+    return errorResponse(res, 'Araç bulunamadı', 404);
   }
 
-  res.json({
-    success: true,
-    data: arac,
-  } as ApiResponse<Arac>);
+  return successResponse(res, arac);
 }));
 
 // POST /api/araclar - Yeni araç ekle
 router.post('/araclar', asyncHandler(async (req: Request, res: Response) => {
+  const eposta = req.headers['x-user-email'] as string | undefined;
   const validation = validateAracInput(req.body);
 
   if (!validation.valid) {
-    return res.status(400).json({
-      success: false,
-      error: 'Validasyon hatası',
-      message: validation.errors.join(', '),
-    } as ApiResponse<null>);
+    return errorResponse(res, 'Validasyon hatası', 400, validation.errors.join(', '));
   }
 
-  // Aynı plaka ile araç var mı kontrol et
-  if (getAracByPlaka(req.body.plaka)) {
-    return res.status(400).json({
-      success: false,
-      error: 'Bu plakaya sahip bir araç zaten mevcut',
-    } as ApiResponse<null>);
+  if (getAracByPlaka(req.body.plaka, eposta)) {
+    return errorResponse(res, 'Bu plakaya sahip bir araç zaten mevcut', 400);
   }
 
   try {
-    const yeniArac = createArac(req.body as AracInput);
-    res.status(201).json({
-      success: true,
-      data: yeniArac,
-      message: 'Araç başarıyla eklendi',
-    } as ApiResponse<Arac>);
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: 'Araç eklenirken hata oluştu',
-    } as ApiResponse<null>);
+    const yeniArac = createArac(req.body as AracInput, eposta);
+    return successResponse(res, yeniArac, 'Araç başarıyla eklendi', 201);
+  } catch {
+    return errorResponse(res, 'Araç eklenirken hata oluştu', 500);
   }
 }));
 
 // PUT /api/araclar/:id - Araç güncelle
 router.put('/araclar/:id', asyncHandler(async (req: Request, res: Response) => {
+  const eposta = req.headers['x-user-email'] as string | undefined;
   const validation = validateAracInput(req.body);
 
   if (!validation.valid) {
-    return res.status(400).json({
-      success: false,
-      error: 'Validasyon hatası',
-      message: validation.errors.join(', '),
-    } as ApiResponse<null>);
+    return errorResponse(res, 'Validasyon hatası', 400, validation.errors.join(', '));
   }
 
-  const mevcut = getAracById(req.params.id);
+  const mevcut = getAracById(req.params.id, eposta);
   if (!mevcut) {
-    return res.status(404).json({
-      success: false,
-      error: 'Araç bulunamadı',
-    } as ApiResponse<null>);
+    return errorResponse(res, 'Araç bulunamadı', 404);
   }
 
-  // Aynı plaka başka bir araçta mı var kontrol et
   if (req.body.plaka && req.body.plaka !== mevcut.plaka) {
-    if (getAracByPlaka(req.body.plaka)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Bu plakaya sahip başka bir araç zaten mevcut',
-      } as ApiResponse<null>);
+    if (getAracByPlaka(req.body.plaka, eposta)) {
+      return errorResponse(res, 'Bu plakaya sahip başka bir araç zaten mevcut', 400);
     }
   }
 
-  const guncelArac = updateArac(req.params.id, req.body);
+  const guncelArac = updateArac(req.params.id, req.body, eposta);
 
   if (!guncelArac) {
-    return res.status(500).json({
-      success: false,
-      error: 'Araç güncellenirken hata oluştu',
-    } as ApiResponse<null>);
+    return errorResponse(res, 'Araç güncellenirken hata oluştu', 500);
   }
 
-  res.json({
-    success: true,
-    data: guncelArac,
-    message: 'Araç başarıyla güncellendi',
-  } as ApiResponse<Arac>);
+  return successResponse(res, guncelArac, 'Araç başarıyla güncellendi');
 }));
 
 // DELETE /api/araclar/:id - Araç sil
 router.delete('/araclar/:id', asyncHandler(async (req: Request, res: Response) => {
-  const silinmiş = deleteArac(req.params.id);
+  const eposta = req.headers['x-user-email'] as string | undefined;
+  const silinmiş = deleteArac(req.params.id, eposta);
 
   if (!silinmiş) {
-    return res.status(404).json({
-      success: false,
-      error: 'Araç bulunamadı',
-    } as ApiResponse<null>);
+    return errorResponse(res, 'Araç bulunamadı', 404);
   }
 
-  res.json({
-    success: true,
-    data: silinmiş,
-    message: 'Araç başarıyla silindi',
-  } as ApiResponse<Arac>);
+  return successResponse(res, silinmiş, 'Araç başarıyla silindi');
 }));
 
 // ============ AYARLAR API ============
 
 // GET /api/ayarlar/bildirim-saati - Varsayılan bildirim saatini getir
-router.get('/ayarlar/bildirim-saati', asyncHandler(async (req: Request, res: Response) => {
+router.get('/ayarlar/bildirim-saati', asyncHandler(async (_req: Request, res: Response) => {
   const saat = getVarsayilanBildirimSaati();
-  res.json({
-    success: true,
-    data: { saat },
-  } as ApiResponse<{ saat: string }>);
+  return successResponse(res, { saat });
 }));
 
 // PUT /api/ayarlar/bildirim-saati - Varsayılan bildirim saatini güncelle
@@ -177,75 +136,134 @@ router.put('/ayarlar/bildirim-saati', asyncHandler(async (req: Request, res: Res
   const { saat } = req.body;
 
   if (!saat || typeof saat !== 'string') {
-    return res.status(400).json({
-      success: false,
-      error: 'Saat parametresi zorunludur',
-    } as ApiResponse<null>);
+    return errorResponse(res, 'Saat parametresi zorunludur', 400);
   }
 
-  if (!/^([0-1][0-9]|2[0-3]):[0-5][0-9]$/.test(saat)) {
-    return res.status(400).json({
-      success: false,
-      error: 'Geçersiz saat formatı (HH:mm kullanınız)',
-    } as ApiResponse<null>);
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(saat)) {
+    return errorResponse(res, 'Geçersiz saat formatı (HH:mm kullanınız)', 400);
   }
 
   setVarsayilanBildirimSaati(saat);
-
-  res.json({
-    success: true,
-    data: { saat },
-    message: 'Bildirim saati güncellendi',
-  } as ApiResponse<{ saat: string }>);
+  return successResponse(res, { saat }, 'Bildirim saati güncellendi');
 }));
 
 // ============ RAPORLAR API ============
 
 // GET /api/raporlar/bildirim - Bildirim raporunu getir
-router.get('/raporlar/bildirim', asyncHandler(async (req: Request, res: Response) => {
-  const rapor = generateBildirimRaporu();
+router.get('/raporlar/bildirim', asyncHandler(async (_req: Request, res: Response) => {
+  const eposta = _req.headers['x-user-email'] as string | undefined;
+  const rapor = generateBildirimRaporu(eposta);
 
-  const yakinda = rapor.filter(r => r.kalanGun > 0 && r.kalanGun <= 30).length;
-  const uyarida = rapor.filter(r => r.kalanGun > 0 && r.kalanGun <= 7).length;
+  const yakinda  = rapor.filter(r => r.kalanGun > 0 && r.kalanGun <= 30).length;
+  const uyarida  = rapor.filter(r => r.kalanGun > 0 && r.kalanGun <= 7).length;
   const gecikmiş = rapor.filter(r => r.kalanGun < 0).length;
 
-  res.json({
-    success: true,
-    data: {
-      rapor,
-      ozet: {
-        toplamArac: getAllAraclar().length,
-        yakinda,
-        uyarida,
-        gecikmiş,
-      },
-    },
-  } as ApiResponse<any>);
+  return successResponse(res, {
+    rapor,
+    ozet: { toplamArac: getAllAraclar(eposta).length, yakinda, uyarida, gecikmiş },
+  });
 }));
 
 // ============ YÖNETİM API ============
 
 // DELETE /api/yonetim/tum-veriler - Tüm verileri sil
 router.delete('/yonetim/tum-veriler', asyncHandler(async (req: Request, res: Response) => {
-  deleteAllAraclar();
+  const eposta = req.headers['x-user-email'] as string | undefined;
 
-  res.json({
-    success: true,
-    message: 'Tüm veriler başarıyla silindi',
-  } as ApiResponse<null>);
+  if (eposta) {
+    deleteAllAraclar(eposta);
+    return successResponse(res, null, 'Kullanici verileri basariyla silindi');
+  }
+
+  if (!adminYetkiliMi(req)) {
+    return errorResponse(res, 'Yonetim islemi icin yetki gerekli', 403);
+  }
+
+  deleteAllAraclar();
+  return successResponse(res, null, 'Tum veriler basariyla silindi');
+}));
+
+// DELETE /api/yonetim/ai-onbellek - AI önbelleğini temizle
+router.delete('/yonetim/ai-onbellek', asyncHandler(async (req: Request, res: Response) => {
+  if (!adminYetkiliMi(req)) {
+    return errorResponse(res, 'Yonetim islemi icin yetki gerekli', 403);
+  }
+
+  onbellekTemizle();
+  return successResponse(res, null, 'AI önbelleği temizlendi');
 }));
 
 // GET /api/saglik-kontrol - Sunucu sağlık kontrolü
-router.get('/saglik-kontrol', asyncHandler(async (req: Request, res: Response) => {
-  res.json({
-    success: true,
-    message: 'Sunucu çalışıyor',
-    data: {
-      status: 'online',
-      timestamp: new Date().toISOString(),
-      aracSayisi: getAllAraclar().length,
-    },
-  } as ApiResponse<any>);
+router.get('/saglik-kontrol', asyncHandler(async (_req: Request, res: Response) => {
+  return successResponse(res, {
+    status: 'online',
+    timestamp: new Date().toISOString(),
+    aracSayisi: getAllAraclar().length,
+    ai: aiDurumRaporu(),
+  }, 'Sunucu çalışıyor');
+}));
+
+// ============ AI DANIŞMAN API ============
+
+/**
+ * GET /api/ai/tavsiye/:id?tip=tavsiye|ozet|uyari
+ * Araç için Gemini AI yanıtı döndürür.
+ * Geçerli tip değerleri: tavsiye (varsayılan), ozet, uyari
+ */
+router.get('/ai/tavsiye/:id', asyncHandler(async (req: Request, res: Response) => {
+  const eposta = req.headers['x-user-email'] as string | undefined;
+  const arac = getAracById(req.params.id, eposta);
+
+  if (!arac) {
+    return errorResponse(res, 'Araç bulunamadı', 404);
+  }
+
+  const izinliTipler: AIPromptTipi[] = ['tavsiye', 'ozet', 'uyari'];
+  const tip = (req.query.tip as AIPromptTipi) ?? 'tavsiye';
+
+  if (!izinliTipler.includes(tip)) {
+    return errorResponse(
+      res,
+      `Geçersiz tip parametresi. İzin verilenler: ${izinliTipler.join(', ')}`,
+      400,
+    );
+  }
+
+  try {
+    const kimlik = getClientIP(req);
+    const tavsiye = await getAIAdvice(arac, tip, kimlik);
+    return successResponse(res, { tavsiye, tip }, 'AI yanıtı başarıyla alındı');
+  } catch {
+    return errorResponse(res, 'AI tavsiyesi alınırken bir hata oluştu', 500);
+  }
+}));
+
+// POST /api/ai/tavsiye
+// İstemciden gelen araç nesnesini doğrudan kullanarak tavsiye üretir
+router.post('/ai/tavsiye', asyncHandler(async (req: Request, res: Response) => {
+  const arac = req.body;
+  if (!arac || !arac.id) {
+    return errorResponse(res, 'Araç bilgisi eksik', 400);
+  }
+
+  const izinliTipler: AIPromptTipi[] = ['tavsiye', 'ozet', 'uyari'];
+  const tip = (req.query.tip as AIPromptTipi) ?? 'tavsiye';
+
+  if (!izinliTipler.includes(tip)) {
+    return errorResponse(
+      res,
+      `Geçersiz tip parametresi. İzin verilenler: ${izinliTipler.join(', ')}`,
+      400,
+    );
+  }
+
+  try {
+    const kimlik = getClientIP(req);
+    const tavsiye = await getAIAdvice(arac, tip, kimlik);
+    return successResponse(res, { tavsiye, tip }, 'AI yanıtı başarıyla alındı');
+  } catch {
+    return errorResponse(res, 'AI tavsiyesi alınırken bir hata oluştu', 500);
+  }
 }));
 
 export default router;

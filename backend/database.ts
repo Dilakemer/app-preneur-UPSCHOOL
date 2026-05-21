@@ -1,37 +1,98 @@
 import { v4 as uuidv4 } from 'uuid';
+import fs from 'fs';
+import path from 'path';
 import type { Arac, AracInput, Bildirimler } from './types';
 import { VARSAYILAN_BILDIRIMLER } from './types';
 
 // In-memory veritabanı
 let araclarDb: Arac[] = [];
 let varsayilanBildirimSaati: string = '09:00';
+let veriYuklendi = false;
+
+const kalicilikAktif = process.env.NODE_ENV !== 'test' && process.env.DB_PERSISTENCE !== 'memory';
+const veriDosyasi =
+  process.env.DB_FILE_PATH ?? path.join(process.cwd(), 'backend', 'data', 'caremind-db.json');
+
+const veriyiYukle = (): void => {
+  if (veriYuklendi || !kalicilikAktif) {
+    veriYuklendi = true;
+    return;
+  }
+
+  veriYuklendi = true;
+
+  if (!fs.existsSync(veriDosyasi)) {
+    return;
+  }
+
+  try {
+    const veri = JSON.parse(fs.readFileSync(veriDosyasi, 'utf8')) as {
+      araclarDb?: Arac[];
+      varsayilanBildirimSaati?: string;
+    };
+
+    araclarDb = Array.isArray(veri.araclarDb) ? veri.araclarDb : [];
+    varsayilanBildirimSaati = veri.varsayilanBildirimSaati || varsayilanBildirimSaati;
+  } catch (error) {
+    console.error('Veritabani dosyasi okunamadi:', error);
+  }
+};
+
+const veriyiKaydet = (): void => {
+  if (!kalicilikAktif) {
+    return;
+  }
+
+  try {
+    fs.mkdirSync(path.dirname(veriDosyasi), { recursive: true });
+    const geciciDosya = `${veriDosyasi}.tmp`;
+    fs.writeFileSync(
+      geciciDosya,
+      JSON.stringify({ araclarDb, varsayilanBildirimSaati }, null, 2),
+      'utf8',
+    );
+    fs.renameSync(geciciDosya, veriDosyasi);
+  } catch (error) {
+    console.error('Veritabani dosyasi yazilamadi:', error);
+  }
+};
 
 // Varsayılan bildirim saatini al
 export const getVarsayilanBildirimSaati = (): string => {
+  veriyiYukle();
   return varsayilanBildirimSaati;
 };
 
 // Varsayılan bildirim saatini güncelle
 export const setVarsayilanBildirimSaati = (saat: string): void => {
+  veriyiYukle();
   varsayilanBildirimSaati = saat;
+  veriyiKaydet();
 };
 
 // Tüm araçları getir
-export const getAllAraclar = (): Arac[] => {
-  return JSON.parse(JSON.stringify(araclarDb)); // Derin kopya
+export const getAllAraclar = (eposta?: string): Arac[] => {
+  veriyiYukle();
+  const filtered = eposta 
+    ? araclarDb.filter(a => a.kullaniciEposta === eposta)
+    : araclarDb;
+  return JSON.parse(JSON.stringify(filtered)); // Derin kopya
 };
 
 // ID ile araç getir
-export const getAracById = (id: string): Arac | undefined => {
-  return araclarDb.find(a => a.id === id);
+export const getAracById = (id: string, eposta?: string): Arac | undefined => {
+  veriyiYukle();
+  return araclarDb.find(a => a.id === id && (!eposta || a.kullaniciEposta === eposta));
 };
 
 // Yeni araç ekle
-export const createArac = (input: AracInput): Arac => {
+export const createArac = (input: AracInput, eposta?: string): Arac => {
+  veriyiYukle();
   const zaman = new Date().toISOString();
   const yeniArac: Arac = {
     ...input,
     id: uuidv4(),
+    kullaniciEposta: eposta,
     bildirimler: {
       ...VARSAYILAN_BILDIRIMLER,
       ...input.bildirimler,
@@ -42,12 +103,14 @@ export const createArac = (input: AracInput): Arac => {
   };
 
   araclarDb.push(yeniArac);
+  veriyiKaydet();
   return yeniArac;
 };
 
 // Araç güncelle
-export const updateArac = (id: string, input: Partial<AracInput>): Arac | null => {
-  const index = araclarDb.findIndex(a => a.id === id);
+export const updateArac = (id: string, input: Partial<AracInput>, eposta?: string): Arac | null => {
+  veriyiYukle();
+  const index = araclarDb.findIndex(a => a.id === id && (!eposta || a.kullaniciEposta === eposta));
   if (index === -1) return null;
 
   const guncelArac: Arac = {
@@ -59,26 +122,36 @@ export const updateArac = (id: string, input: Partial<AracInput>): Arac | null =
   };
 
   araclarDb[index] = guncelArac;
+  veriyiKaydet();
   return guncelArac;
 };
 
 // Araç sil
-export const deleteArac = (id: string): Arac | null => {
-  const index = araclarDb.findIndex(a => a.id === id);
+export const deleteArac = (id: string, eposta?: string): Arac | null => {
+  veriyiYukle();
+  const index = araclarDb.findIndex(a => a.id === id && (!eposta || a.kullaniciEposta === eposta));
   if (index === -1) return null;
 
   const [silinmiş] = araclarDb.splice(index, 1);
+  veriyiKaydet();
   return silinmiş;
 };
 
 // Tüm araçları sil
-export const deleteAllAraclar = (): void => {
-  araclarDb = [];
+export const deleteAllAraclar = (eposta?: string): void => {
+  veriyiYukle();
+  if (eposta) {
+    araclarDb = araclarDb.filter(a => a.kullaniciEposta !== eposta);
+  } else {
+    araclarDb = [];
+  }
+  veriyiKaydet();
 };
 
 // Plaka ile araç getir
-export const getAracByPlaka = (plaka: string): Arac | undefined => {
-  return araclarDb.find(a => a.plaka.toUpperCase() === plaka.toUpperCase());
+export const getAracByPlaka = (plaka: string, eposta?: string): Arac | undefined => {
+  veriyiYukle();
+  return araclarDb.find(a => a.plaka.toUpperCase() === plaka.toUpperCase() && (!eposta || a.kullaniciEposta === eposta));
 };
 
 // Kalan gün hesapla
@@ -95,10 +168,10 @@ export const kalanGunHesapla = (tarih: string | null): number | null => {
 };
 
 // Bildirim raporu oluştur
-export const generateBildirimRaporu = () => {
+export const generateBildirimRaporu = (eposta?: string) => {
   const rapor: any[] = [];
 
-  for (const arac of araclarDb) {
+  for (const arac of getAllAraclar(eposta)) {
     const tarihler = [
       { kategori: 'muayene', tarih: arac.muayeneTarihi, bildirim: arac.bildirimler },
       { kategori: 'sigorta', tarih: arac.sigortaTarihi, bildirim: arac.bildirimler },
@@ -130,6 +203,9 @@ export const generateBildirimRaporu = () => {
 
 // Örnek veri yükle
 export const seedDatabase = () => {
+  veriyiYukle();
+  if (araclarDb.length > 0) return;
+
   araclarDb = [
     {
       id: uuidv4(),
@@ -160,4 +236,5 @@ export const seedDatabase = () => {
       guncellemeTarihi: new Date().toISOString(),
     },
   ];
+  veriyiKaydet();
 };

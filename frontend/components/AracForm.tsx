@@ -291,7 +291,7 @@ export const AracForm = ({ mode, aracId }: AracFormProps) => {
               <Switch
                 onValueChange={guncelle}
                 thumbColor={renkler.beyaz}
-                trackColor={{ false: '#CABEB1', true: renkler.vurgu }}
+                trackColor={{ false: renkler.arkaPlanKoyu, true: renkler.vurgu }}
                 value={deger}
               />
             </View>
@@ -353,9 +353,9 @@ const styles = StyleSheet.create({
   },
   heroBaslik: {
     color: renkler.beyaz,
-    fontSize: 30,
+    fontSize: 28,
+    fontWeight: '700',
     lineHeight: 34,
-    fontFamily: 'Georgia',
   },
   heroAciklama: {
     color: '#D7E3F2',
@@ -372,8 +372,8 @@ const styles = StyleSheet.create({
   },
   bolumBaslik: {
     color: renkler.metin,
-    fontSize: 20,
-    fontFamily: 'Georgia',
+    fontSize: 18,
+    fontWeight: '700',
   },
   alanGrubu: {
     gap: 8,
@@ -392,7 +392,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   input: {
-    backgroundColor: renkler.beyaz,
+    backgroundColor: renkler.arkaPlanKoyu,
     borderWidth: 1,
     borderColor: renkler.cizgi,
     borderRadius: 18,
@@ -409,11 +409,11 @@ const styles = StyleSheet.create({
   uyariKutusu: {
     flexDirection: 'row',
     gap: 10,
-    backgroundColor: '#FFF6E6',
+    backgroundColor: 'rgba(245, 158, 11, 0.1)', // sari but transparent
     borderRadius: 18,
     padding: 14,
     borderWidth: 1,
-    borderColor: '#F4D28C',
+    borderColor: 'rgba(245, 158, 11, 0.3)',
   },
   uyariMetni: {
     flex: 1,
@@ -433,8 +433,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   koyuButon: {
-    backgroundColor: renkler.arkaPlanKoyu,
-    borderRadius: 999,
+    backgroundColor: renkler.vurgu,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 54,

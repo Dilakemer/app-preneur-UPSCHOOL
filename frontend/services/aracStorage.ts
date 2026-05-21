@@ -5,11 +5,23 @@ import type { Arac, AracInput } from '../types/Arac';
 import { VARSAYILAN_BILDIRIMLER } from '../types/Arac';
 
 const UYGULAMA_PREFIX = '@caremind';
-const DEPOLAMA_ANAHTARI = `${UYGULAMA_PREFIX}:araclar`;
 const ONBOARDING_ANAHTARI = `${UYGULAMA_PREFIX}:onboarding`;
 const BILDIRIM_SAATI_ANAHTARI = `${UYGULAMA_PREFIX}:bildirim_saat`;
 const BILDIRIM_IZIN_ANAHTARI = `${UYGULAMA_PREFIX}:bildirim_izni`;
 const BILDIRIM_KEY_PREFIX = `${UYGULAMA_PREFIX}:bildirimler:`;
+
+const getDepolamaAnahtari = async (): Promise<string> => {
+  const eposta = await AsyncStorage.getItem('@caremind:kayitliEposta');
+  return eposta ? `${UYGULAMA_PREFIX}:araclar:${eposta.trim().toLowerCase()}` : `${UYGULAMA_PREFIX}:araclar:guest`;
+};
+
+const getHeaders = async () => {
+  const eposta = await AsyncStorage.getItem('@caremind:kayitliEposta');
+  return {
+    'Content-Type': 'application/json',
+    ...(eposta ? { 'X-User-Email': eposta.trim() } : {})
+  };
+};
 
 const bildirimKey = (aracId: string) => `${BILDIRIM_KEY_PREFIX}${aracId}`;
 
@@ -26,12 +38,15 @@ const getApiUrl = () => {
 const API_URL = getApiUrl();
 
 export const getAraclar = async (): Promise<Arac[]> => {
+  const depolamaKey = await getDepolamaAnahtari();
+  const headers = await getHeaders();
+  
   try {
-    const res = await fetch(`${API_URL}/araclar`);
+    const res = await fetch(`${API_URL}/araclar`, { headers });
     if (res.ok) {
       const data = await res.json();
       if (data.success) {
-        await AsyncStorage.setItem(DEPOLAMA_ANAHTARI, JSON.stringify(data.data));
+        await AsyncStorage.setItem(depolamaKey, JSON.stringify(data.data));
         return data.data;
       }
     }
@@ -40,7 +55,7 @@ export const getAraclar = async (): Promise<Arac[]> => {
   }
   
   try {
-    const json = await AsyncStorage.getItem(DEPOLAMA_ANAHTARI);
+    const json = await AsyncStorage.getItem(depolamaKey);
     return json ? (JSON.parse(json) as Arac[]) : [];
   } catch {
     return [];
@@ -48,14 +63,17 @@ export const getAraclar = async (): Promise<Arac[]> => {
 };
 
 export const saveAraclar = async (araclar: Arac[]) => {
-  await AsyncStorage.setItem(DEPOLAMA_ANAHTARI, JSON.stringify(araclar));
+  const depolamaKey = await getDepolamaAnahtari();
+  await AsyncStorage.setItem(depolamaKey, JSON.stringify(araclar));
 };
 
 export const addArac = async (data: AracInput): Promise<Arac> => {
+  const headers = await getHeaders();
+  
   try {
     const res = await fetch(`${API_URL}/araclar`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify(data),
     });
     if (res.ok) {
@@ -93,11 +111,12 @@ export const addArac = async (data: AracInput): Promise<Arac> => {
 };
 
 export const updateArac = async (arac: Arac) => {
+  const headers = await getHeaders();
   let guncellenecekArac = { ...arac, guncellemeTarihi: new Date().toISOString() };
   try {
     const res = await fetch(`${API_URL}/araclar/${arac.id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify(arac),
     });
     if (res.ok) {
@@ -116,8 +135,9 @@ export const updateArac = async (arac: Arac) => {
 };
 
 export const deleteArac = async (id: string) => {
+  const headers = await getHeaders();
   try {
-    await fetch(`${API_URL}/araclar/${id}`, { method: 'DELETE' });
+    await fetch(`${API_URL}/araclar/${id}`, { method: 'DELETE', headers });
   } catch (error) {
     console.warn('API deleteArac hatası, yerel olarak siliniyor:', error);
   }
@@ -194,8 +214,10 @@ export const clearTumBildirimKayitlari = async () => {
 };
 
 export const clearTumVeriler = async () => {
+  const headers = await getHeaders();
+
   try {
-    await fetch(`${API_URL}/yonetim/tum-veriler`, { method: 'DELETE' });
+    await fetch(`${API_URL}/yonetim/tum-veriler`, { method: 'DELETE', headers });
   } catch (error) {
     console.warn('API clearTumVeriler hatası:', error);
   }
