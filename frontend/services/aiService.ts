@@ -1,15 +1,7 @@
-import { Platform } from 'react-native';
+import { API_URL } from './apiConfig';
 import type { Arac } from '../types/Arac';
 
 export type AITip = 'tavsiye' | 'ozet' | 'uyari';
-
-const getApiUrl = () => {
-  if (process.env.EXPO_PUBLIC_API_URL) return process.env.EXPO_PUBLIC_API_URL;
-  if (Platform.OS === 'android') return 'http://10.0.2.2:3001/api';
-  return 'http://localhost:3001/api';
-};
-
-const API_URL = getApiUrl();
 
 export const aiService = {
   getAracTavsiyesi: async (arac: Arac, tip: AITip = 'tavsiye'): Promise<string> => {

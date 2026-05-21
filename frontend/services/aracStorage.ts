@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Platform } from 'react-native';
+import { API_URL } from './apiConfig';
 import type { BildirimIzinDurumu } from '../types/Api';
 import type { Arac, AracInput } from '../types/Arac';
 import { VARSAYILAN_BILDIRIMLER } from '../types/Arac';
@@ -29,13 +29,6 @@ const yeniIdOlustur = () =>
   typeof globalThis.crypto?.randomUUID === 'function'
     ? globalThis.crypto.randomUUID()
     : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-
-const getApiUrl = () => {
-  if (process.env.EXPO_PUBLIC_API_URL) return process.env.EXPO_PUBLIC_API_URL;
-  if (Platform.OS === 'android') return 'http://10.0.2.2:3001/api';
-  return 'http://localhost:3001/api';
-};
-const API_URL = getApiUrl();
 
 export const getAraclar = async (): Promise<Arac[]> => {
   const depolamaKey = await getDepolamaAnahtari();
