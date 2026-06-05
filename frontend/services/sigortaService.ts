@@ -1,7 +1,11 @@
 import type { Arac } from '../types/Arac';
 import { SIGORTAM_AFFILIATE_URL } from '../constants/apiKeys';
+import { API_URL } from './apiConfig';
 
-export const sigortaTeklifURLiOlustur = (arac: Arac) => {
+import { AFFILIATE_URLS } from '../constants/apiKeys';
+
+export const sigortaTeklifURLiOlustur = (arac: Arac, insurerId?: string) => {
+  const base = (insurerId && AFFILIATE_URLS[insurerId]) ? AFFILIATE_URLS[insurerId] : SIGORTAM_AFFILIATE_URL;
   const params = new URLSearchParams({
     utm_source: 'caremind',
     utm_medium: 'app',
@@ -13,7 +17,7 @@ export const sigortaTeklifURLiOlustur = (arac: Arac) => {
     yil: String(arac.yil),
   });
 
-  return `${SIGORTAM_AFFILIATE_URL}?${params.toString()}`;
+  return `${base}?${params.toString()}`;
 };
 
 export const internetBaglantisiVarMi = async () => {
@@ -32,4 +36,20 @@ export const internetBaglantisiVarMi = async () => {
     clearTimeout(timeoutId);
     return false;
   }
+};
+
+export type Teklif = { id: string; name: string; price: number; raw?: any };
+
+export const fetchQuotesFromBackend = async (arac: Arac): Promise<Teklif[]> => {
+  const url = `${API_URL}/sigorta/teklifler`;
+  const resp = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(arac),
+  });
+
+  if (!resp.ok) throw new Error('Teklifler alınamadı');
+  const body = await resp.json();
+  // apiLayer uses { success, data }
+  return body.data ?? [];
 };

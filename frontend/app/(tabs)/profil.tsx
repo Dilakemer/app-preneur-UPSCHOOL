@@ -1,4 +1,5 @@
 import { Feather } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
@@ -10,6 +11,7 @@ import {
   Text,
   TextInput,
   View,
+  Linking,
 } from 'react-native';
 import { renkler } from '../../constants/renkler';
 import { useAraclar } from '../../hooks/useAraclar';
@@ -18,6 +20,7 @@ const emailGecerliMi = (deger: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(dege
 
 export default function ProfilScreen() {
   const { araclar } = useAraclar();
+  const router = useRouter();
   const [isim, setIsim] = useState('Misafir Kullanici');
   const [duzenlemeModu, setDuzenlemeModu] = useState(false);
   const [yeniIsim, setYeniIsim] = useState('');
@@ -246,6 +249,19 @@ export default function ProfilScreen() {
           <Achievement icon="cpu" color={renkler.vurgu} title="AI Hazir" desc="Arac detayindan danisman tavsiyesi alabilirsin." />
         </View>
 
+        <Pressable style={styles.compareButton} onPress={() => {
+          const firstAracId = araclar.length > 0 ? araclar[0].id : undefined;
+          router.push(`/sigorta-karsilastir?aracId=${firstAracId ?? ''}`);
+        }}>
+          <Feather name="bar-chart-2" size={18} color={renkler.beyaz} />
+          <Text style={styles.compareButtonText}>Sigorta Fiyatlarini Karsilastir</Text>
+        </Pressable>
+
+        <Pressable style={styles.supportButton} onPress={() => Linking.openURL('mailto:support@caremind.app?subject=CareMind%20Destek')}>
+          <Feather name="help-circle" size={18} color={renkler.metin} />
+          <Text style={styles.supportButtonText}>Destek Al</Text>
+        </Pressable>
+
         <Pressable style={styles.logoutButton} onPress={cikisYap}>
           <Feather name="log-out" size={20} color={renkler.hata} />
           <Text style={styles.logoutText}>Cikis Yap</Text>
@@ -380,6 +396,30 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   logoutText: { color: renkler.hata, fontSize: 16, fontWeight: '700' },
+  compareButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 14,
+    marginTop: 12,
+    backgroundColor: renkler.vurgu,
+    borderRadius: 16,
+    gap: 10,
+  },
+  compareButtonText: { color: '#FFF', fontSize: 15, fontWeight: '800' },
+  supportButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 12,
+    marginTop: 12,
+    backgroundColor: renkler.kart,
+    borderRadius: 12,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: renkler.cizgi,
+  },
+  supportButtonText: { color: renkler.metin, fontSize: 15, fontWeight: '700', marginLeft: 8 },
   loginScrollContainer: { flexGrow: 1, justifyContent: 'center', paddingVertical: 40 },
   loginContainer: { padding: 24, justifyContent: 'center' },
   loginHeader: { alignItems: 'center', marginBottom: 36 },

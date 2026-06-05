@@ -12,6 +12,7 @@ import {
   generateBildirimRaporu,
 } from './database';
 import { getAIAdvice, onbellekTemizle, aiDurumRaporu, type AIPromptTipi } from './aiService';
+import { fetchQuotes } from './insurers';
 import { asyncHandler, validateAracInput } from './middleware';
 import { successResponse, errorResponse, getClientIP } from './apiLayer';
 import type { Arac, AracInput } from './types';
@@ -201,6 +202,22 @@ router.get('/saglik-kontrol', asyncHandler(async (_req: Request, res: Response) 
     aracSayisi: getAllAraclar().length,
     ai: aiDurumRaporu(),
   }, 'Sunucu çalışıyor');
+}));
+
+// POST /api/sigorta/teklifler - Araç bilgisine göre sigorta tekliflerini birleştir
+router.post('/sigorta/teklifler', asyncHandler(async (req: Request, res: Response) => {
+  const arac = req.body;
+
+  if (!arac || !arac.plaka || !arac.yil) {
+    return errorResponse(res, 'Araç bilgisi eksik (plaka ve yil gerekli)', 400);
+  }
+
+  try {
+    const teklifler = await fetchQuotes(arac);
+    return successResponse(res, teklifler, 'Teklifler alindi');
+  } catch (e) {
+    return errorResponse(res, 'Teklifler alınırken hata oluştu', 500);
+  }
 }));
 
 // ============ AI DANIŞMAN API ============

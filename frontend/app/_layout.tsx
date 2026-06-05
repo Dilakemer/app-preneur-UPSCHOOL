@@ -7,7 +7,7 @@ export default function RootLayout() {
   return (
     <NotificationProvider>
       <AraclarProvider>
-        <Stack />
+        <Stack screenOptions={{ headerShown: false }} />
       </AraclarProvider>
     </NotificationProvider>
   );
