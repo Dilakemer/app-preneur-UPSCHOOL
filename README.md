@@ -62,45 +62,21 @@ Proje ile ilgili detaylı teknik belgelere `/prodocs` klasöründen ulaşabilirs
 *Hazırlayan: Dila KEMER*
 
 ## 🖼️ Ekran Görüntüleri
-Projeyi inceleyecek işverenler ve test kullanıcıları için önemli ekran görüntüleri:
-- [Dashboard](screenshoots/dashboard.png)
-- [Araç Detayı](screenshoots/detail.png)
-- [Araç Ekleme](screenshoots/add_vehicle.png)
-- [Raporlar](screenshoots/reports.png)
-- [Ayarlar](screenshoots/settings.png)
-- Mobil ekranlardan örnekler: [WhatsApp Images](screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20(1).jpeg) (birkaçı)
-- Mobil ekranlardan örnekler:
-	- [WhatsApp Image 1](screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%281%29.jpeg)
-	- [WhatsApp Image 2](screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%282%29.jpeg)
-	- [WhatsApp Image 3](screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%283%29.jpeg)
-	- [WhatsApp Image 4](screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%284%29.jpeg)
-	- [WhatsApp Image 5](screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%285%29.jpeg)
-	- [WhatsApp Image 6](screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%286%29.jpeg)
-	- [WhatsApp Image (original)](screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53.jpeg)
+Aşağıdaki ekran görüntüleri, uygulamanın ana akışından alınmış örnek görüntülerdir.
 
-## ▶️ İşverenler için Hızlı Test Rehberi
-1. Depoyu klonlayın ve hem backend hem frontend bağımlılıklarını yükleyin:
-```bash
-git clone <repo-url>
-cd "Yeni klasör"
-npm install
-cd frontend && npm install
-```
-2. Ortam değişkenlerini ayarlayın: root dizinde `.env.example` bulunur; kopyalayın ve gerekirse düzenleyin.
-```bash
-cp .env.example .env
-# frontend için EXPO_PUBLIC_API_URL doğruysa (ör: http://localhost:3001/api) bırakın
-```
-3. Backend ve frontend'i ayrı terminallerde çalıştırın:
-```bash
-# Backend
-npm run dev
+<p align="center">
+  <img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%281%29.jpeg" alt="Ekran 1" width="260" style="margin:8px;" />
+  <img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%282%29.jpeg" alt="Ekran 2" width="260" style="margin:8px;" />
+  <img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%283%29.jpeg" alt="Ekran 3" width="260" style="margin:8px;" />
+</p>
 
-# Frontend (expo)
-cd frontend
-npx expo start
-```
-4. Uygulamayı Expo Go ile cihazınızda açın veya emülatörde test edin. Profil sekmesinden `Sigorta Fiyatlarını Karşılaştır` ekranına gidin.
+<p align="center">
+  <img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%284%29.jpeg" alt="Ekran 4" width="260" style="margin:8px;" />
+  <img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%285%29.jpeg" alt="Ekran 5" width="260" style="margin:8px;" />
+  <img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%286%29.jpeg" alt="Ekran 6" width="260" style="margin:8px;" />
+</p>
+
+Orijinal yüksek çözünürlüklü görüntü: [WhatsApp Image](screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53.jpeg)
 
 ## Sigorta Karşılaştırma Özelliği
 - Özellik: `Sigorta Fiyatlarını Karşılaştır` ekranı eklendi — işlev hem "affiliate/tahmini" modu (kayıt olmadan çalışır) hem de isteğe bağlı gerçek sağlayıcı entegrasyonlarını destekler.
