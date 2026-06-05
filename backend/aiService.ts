@@ -67,13 +67,16 @@ export function rateLimitAsildi(kimlik: string): boolean {
   return false;
 }
 
-function promptOlustur(arac: Arac, tip: AIPromptTipi): string {
+function promptOlustur(arac: Arac, tip: AIPromptTipi, soru?: string): string {
   const aracSatiri = `${arac.marka} ${arac.model} (${arac.yil}) - Plaka: ${arac.plaka}`;
   const tarihBlok = `
   - Muayene Tarihi : ${arac.muayeneTarihi ?? 'Belirtilmedi'}
   - Sigorta Tarihi : ${arac.sigortaTarihi ?? 'Belirtilmedi'}
   - Kasko Tarihi   : ${arac.kaskoTarihi ?? 'Belirtilmedi'}
   - Bakim Tarihi   : ${arac.bakimTarihi ?? 'Belirtilmedi'}`;
+  const soruBlok = soru?.trim()
+    ? `\nKullanicinin sorusu: ${soru.trim().slice(0, 500)}`
+    : '';
 
   const tabanTalimat =
     'Yanitin yalnizca Turkce olsun. Teknik jargon kullanma. Madde isareti veya baslik ekleme.';
@@ -86,7 +89,7 @@ Asagidaki arac icin en onemli 2-3 bakim/sigorta tavsiyesini maksimum 4 cumlede v
 Yaklasan tarihler varsa mutlaka belirt.
 
 Arac: ${aracSatiri}
-Tarihler:${tarihBlok}`;
+Tarihler:${tarihBlok}${soruBlok}`;
 
     case 'ozet':
       return `Sen bir arac kayit asistanisin.
@@ -94,7 +97,7 @@ ${tabanTalimat}
 Asagidaki arac bilgilerini 2 cumlede ozetle; arac yasi ve en kritik tarihe dikkat cek.
 
 Arac: ${aracSatiri}
-Tarihler:${tarihBlok}`;
+Tarihler:${tarihBlok}${soruBlok}`;
 
     case 'uyari':
       return `Sen acil uyari sisteminin parcasisin.
@@ -103,7 +106,7 @@ Asagidaki arac icin 7 gun icinde dolacak veya gecmis tarihleri belirterek 1-2 cu
 Hic yaklasan tarih yoksa "Yaklasan kritik tarih bulunmamaktadir." yaz.
 
 Arac: ${aracSatiri}
-Tarihler:${tarihBlok}`;
+Tarihler:${tarihBlok}${soruBlok}`;
 
     default:
       return '';
@@ -120,7 +123,7 @@ function gunFarki(tarih: string): number {
   return Math.ceil((hedef.getTime() - bugun.getTime()) / (1000 * 60 * 60 * 24));
 }
 
-function yerelTavsiyeOlustur(arac: Arac, tip: AIPromptTipi): string {
+function yerelTavsiyeOlustur(arac: Arac, tip: AIPromptTipi, soru?: string): string {
   const aracAdi = `${arac.marka} ${arac.model} (${arac.yil})`;
   const tarihler = [
     { ad: 'muayene', tarih: arac.muayeneTarihi },
@@ -133,6 +136,10 @@ function yerelTavsiyeOlustur(arac: Arac, tip: AIPromptTipi): string {
     .sort((a, b) => a.kalanGun - b.kalanGun);
 
   if (!tarihler.length) {
+    if (soru?.trim()) {
+      return `${aracAdi} icin yeterli tarih verisi yok. Sorunuz icin once muayene, sigorta, kasko veya bakim tarihlerinden en az birini eklemeniz daha net tavsiye almamizi saglar.`;
+    }
+
     return `${aracAdi} icin kayitli tarih bulunmuyor. Muayene, sigorta, kasko ve bakim tarihlerini ekleyip hatirlaticilari acik tutmanizi oneririm.`;
   }
 
@@ -175,12 +182,13 @@ export const getAIAdvice = async (
   arac: Arac,
   tip: AIPromptTipi = 'tavsiye',
   kimlik: string = arac.id,
+  soru?: string,
 ): Promise<string> => {
   if (rateLimitAsildi(kimlik)) {
     return 'Cok fazla istek gonderdiniz. Lutfen bir dakika sonra tekrar deneyin.';
   }
 
-  const cacheAnahtari = `${arac.id}:${tip}`;
+  const cacheAnahtari = `${arac.id}:${tip}:${soru?.trim().slice(0, 80) ?? ''}`;
   const onbellekYaniti = onbellektenAl(cacheAnahtari);
   if (onbellekYaniti) {
     console.log(`[AI Cache HIT] ${cacheAnahtari}`);
@@ -189,12 +197,12 @@ export const getAIAdvice = async (
 
   if (!GEMINI_API_KEY) {
     console.warn('[AI Local Fallback] GEMINI_API_KEY tanimli degil.');
-    const yerelYanit = yerelTavsiyeOlustur(arac, tip);
+    const yerelYanit = yerelTavsiyeOlustur(arac, tip, soru);
     onbellekteKaydet(cacheAnahtari, yerelYanit);
     return yerelYanit;
   }
 
-  const prompt = promptOlustur(arac, tip);
+  const prompt = promptOlustur(arac, tip, soru);
 
   try {
     console.log(`[AI Request] aracId=${arac.id} tip=${tip}`);
@@ -237,7 +245,7 @@ export const getAIAdvice = async (
     const eskiOnbellek = onbellek.get(cacheAnahtari);
     if (eskiOnbellek) return eskiOnbellek.sonuc;
 
-    const yerelYanit = yerelTavsiyeOlustur(arac, tip);
+    const yerelYanit = yerelTavsiyeOlustur(arac, tip, soru);
     onbellekteKaydet(cacheAnahtari, yerelYanit);
     return yerelYanit;
   }

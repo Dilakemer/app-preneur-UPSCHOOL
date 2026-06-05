@@ -5,9 +5,12 @@ import { renkler } from '../../constants/renkler';
 import { useAraclar } from '../../hooks/useAraclar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Feather } from '@expo/vector-icons';
+import { senkronizeTumBildirimler } from '../../services/bildirimService';
+import { useNotificationContext } from '../../contexts/NotificationContext';
 
 export default function AyarlarScreen() {
-  const { varsayilanBildirimSaati, varsayilanSaatiGuncelle, tumVerileriSil } = useAraclar();
+  const { araclar, varsayilanBildirimSaati, varsayilanSaatiGuncelle, tumVerileriSil } = useAraclar();
+  const { izinIstegiYap } = useNotificationContext();
   const [bildirimSaati, setBildirimSaati] = useState<Date | null>(null);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
@@ -35,11 +38,17 @@ export default function AyarlarScreen() {
   );
 
   const toggleNotifications = useCallback(
-    (val: boolean) => {
+    async (val: boolean) => {
       setNotificationsEnabled(val);
-      AsyncStorage.setItem('@caremind:notificationsEnabled', val ? '1' : '0');
+      await AsyncStorage.setItem('@caremind:notificationsEnabled', val ? '1' : '0');
+
+      if (val) {
+        await izinIstegiYap();
+      }
+
+      await senkronizeTumBildirimler(araclar);
     },
-    [],
+    [araclar, izinIstegiYap],
   );
 
   const handleClear = useCallback(() => {

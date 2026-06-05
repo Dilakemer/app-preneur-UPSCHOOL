@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import { BILDIRIM_GUNLERI } from '../constants/bildirimAraliklari';
@@ -15,6 +16,12 @@ import { bildirimIcinOnceliklendir } from '../utils/bildirimOnceliklendir';
 import { saatStringiniParcala, tarihStringiniDateYap } from '../utils/tarihHesapla';
 
 let handlerHazir = false;
+const BILDIRIM_AKTIF_ANAHTARI = '@caremind:notificationsEnabled';
+
+const bildirimTercihiAktifMi = async () => {
+  const tercih = await AsyncStorage.getItem(BILDIRIM_AKTIF_ANAHTARI);
+  return tercih === null || tercih === '1' || tercih === 'true';
+};
 
 export const bildirimleriYapilandir = async () => {
   if (!handlerHazir) {
@@ -196,7 +203,10 @@ export const senkronizeTumBildirimler = async (araclar: Arac[]) => {
 
   const izin = await izinDurumunuKontrolEt();
 
-  if (izin !== 'granted') {
+  if (izin !== 'granted' || !(await bildirimTercihiAktifMi())) {
+    await Notifications.cancelAllScheduledNotificationsAsync();
+    await clearTumBildirimKayitlari();
+
     return {
       atlananAracIdleri: [] as string[],
       planlananBildirimSayisi: 0,

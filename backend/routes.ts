@@ -231,7 +231,8 @@ router.get('/ai/tavsiye/:id', asyncHandler(async (req: Request, res: Response) =
 
   try {
     const kimlik = getClientIP(req);
-    const tavsiye = await getAIAdvice(arac, tip, kimlik);
+    const soru = typeof req.query.soru === 'string' ? req.query.soru : undefined;
+    const tavsiye = await getAIAdvice(arac, tip, kimlik, soru);
     return successResponse(res, { tavsiye, tip }, 'AI yanıtı başarıyla alındı');
   } catch {
     return errorResponse(res, 'AI tavsiyesi alınırken bir hata oluştu', 500);
@@ -259,7 +260,8 @@ router.post('/ai/tavsiye', asyncHandler(async (req: Request, res: Response) => {
 
   try {
     const kimlik = getClientIP(req);
-    const tavsiye = await getAIAdvice(arac, tip, kimlik);
+    const soru = typeof req.body.soru === 'string' ? req.body.soru : undefined;
+    const tavsiye = await getAIAdvice(arac, tip, kimlik, soru);
     return successResponse(res, { tavsiye, tip }, 'AI yanıtı başarıyla alındı');
   } catch {
     return errorResponse(res, 'AI tavsiyesi alınırken bir hata oluştu', 500);
