@@ -63,54 +63,30 @@ Proje ile ilgili detaylı teknik belgelere `/prodocs` klasöründen ulaşabilirs
 
 ## 🖼️ Ekran Görüntüleri
 Aşağıdaki görseller alt alta düzenlendi — her biri tek satırda gösterilir. (Tıklayarak yüksek çözünürlüklü orijinalleri açabilirsiniz.)
-
-### Raporlar Ekranı
+### 1 — Araç Ekleme (form)
 <div align="center">
-	<img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%285%29.jpeg" alt="Raporlar Ekranı" style="width:320px;max-width:100%;height:auto;border-radius:8px;border:1px solid #222;" />
+  <img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%281%29.jpeg" alt="Araç Ekle 1" style="width:320px;max-width:100%;height:auto;border-radius:8px;border:1px solid #222;" />
 </div>
 
-### Ayarlar
+### 2 — Araçlarım
 <div align="center">
-	<img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%286%29.jpeg" alt="Ayarlar" style="width:320px;max-width:100%;height:auto;border-radius:8px;border:1px solid #222;" />
+  <img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%282%29.jpeg" alt="Araçlarım" style="width:320px;max-width:100%;height:auto;border-radius:8px;border:1px solid #222;" />
 </div>
 
-### Profil ve Sekmeler
+### 3 — Ayarlar
 <div align="center">
-	<img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%283%29.jpeg" alt="Profil ve Sekmeler" style="width:320px;max-width:100%;height:auto;border-radius:8px;border:1px solid #222;" />
+  <img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%283%29.jpeg" alt="Ayarlar" style="width:320px;max-width:100%;height:auto;border-radius:8px;border:1px solid #222;" />
 </div>
 
-### Araç Ekle - Form (1)
+### 4 — Profil Ayarları
 <div align="center">
-	<img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%281%29.jpeg" alt="Araç Ekle 1" style="width:320px;max-width:100%;height:auto;border-radius:8px;border:1px solid #222;" />
+  <img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%284%29.jpeg" alt="Profil Ayarları" style="width:320px;max-width:100%;height:auto;border-radius:8px;border:1px solid #222;" />
 </div>
 
-### Araç Ekle - Form (2)
+### 5 — Profil & Sigorta Kıyaslama
 <div align="center">
-	<img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%282%29.jpeg" alt="Araç Ekle 2" style="width:320px;max-width:100%;height:auto;border-radius:8px;border:1px solid #222;" />
+  <img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%285%29.jpeg" alt="Profil ve Sigorta Kıyaslama" style="width:320px;max-width:100%;height:auto;border-radius:8px;border:1px solid #222;" />
 </div>
-
-### Dashboard
-<div align="center">
-	<img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%283%29.jpeg" alt="Dashboard" style="width:320px;max-width:100%;height:auto;border-radius:8px;border:1px solid #222;" />
-</div>
-
-### Raporlar
-<div align="center">
-	<img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%285%29.jpeg" alt="Raporlar" style="width:320px;max-width:100%;height:auto;border-radius:8px;border:1px solid #222;" />
-</div>
-
-### Ayarlar
-<div align="center">
-	<img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%286%29.jpeg" alt="Ayarlar" style="width:320px;max-width:100%;height:auto;border-radius:8px;border:1px solid #222;" />
-</div>
-
-### Profil ve Sekmeler
-<div align="center">
-	<img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%284%29.jpeg" alt="Profil ve Sekmeler" style="width:320px;max-width:100%;height:auto;border-radius:8px;border:1px solid #222;" />
-</div>
-
-### Orijinal Yüksek Çözünürlük
-WhatsApp Images ZIP (eklenmiş, açılmamış)
 
 ## Sigorta Karşılaştırma Özelliği
 - Özellik: `Sigorta Fiyatlarını Karşılaştır` ekranı eklendi — işlev hem "affiliate/tahmini" modu (kayıt olmadan çalışır) hem de isteğe bağlı gerçek sağlayıcı entegrasyonlarını destekler.
