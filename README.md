@@ -66,47 +66,47 @@ Aşağıdaki görseller alt alta düzenlendi — her biri tek satırda gösteril
 
 ### Raporlar Ekranı
 <div align="center">
-	<img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%285%29.jpeg" alt="Raporlar Ekranı" style="max-width:480px;width:100%;height:auto;border-radius:8px;border:1px solid #222;" />
+	<img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%285%29.jpeg" alt="Raporlar Ekranı" style="width:320px;max-width:100%;height:auto;border-radius:8px;border:1px solid #222;" />
 </div>
 
 ### Ayarlar
 <div align="center">
-	<img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%286%29.jpeg" alt="Ayarlar" style="max-width:480px;width:100%;height:auto;border-radius:8px;border:1px solid #222;" />
+	<img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%286%29.jpeg" alt="Ayarlar" style="width:320px;max-width:100%;height:auto;border-radius:8px;border:1px solid #222;" />
 </div>
 
 ### Profil ve Sekmeler
 <div align="center">
-	<img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%283%29.jpeg" alt="Profil ve Sekmeler" style="max-width:480px;width:100%;height:auto;border-radius:8px;border:1px solid #222;" />
+	<img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%283%29.jpeg" alt="Profil ve Sekmeler" style="width:320px;max-width:100%;height:auto;border-radius:8px;border:1px solid #222;" />
 </div>
 
 ### Araç Ekle - Form (1)
 <div align="center">
-	<img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%281%29.jpeg" alt="Araç Ekle 1" style="max-width:480px;width:100%;height:auto;border-radius:8px;border:1px solid #222;" />
+	<img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%281%29.jpeg" alt="Araç Ekle 1" style="width:320px;max-width:100%;height:auto;border-radius:8px;border:1px solid #222;" />
 </div>
 
 ### Araç Ekle - Form (2)
 <div align="center">
-	<img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%282%29.jpeg" alt="Araç Ekle 2" style="max-width:480px;width:100%;height:auto;border-radius:8px;border:1px solid #222;" />
+	<img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%282%29.jpeg" alt="Araç Ekle 2" style="width:320px;max-width:100%;height:auto;border-radius:8px;border:1px solid #222;" />
 </div>
 
 ### Dashboard
 <div align="center">
-	<img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%283%29.jpeg" alt="Dashboard" style="max-width:480px;width:100%;height:auto;border-radius:8px;border:1px solid #222;" />
+	<img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%283%29.jpeg" alt="Dashboard" style="width:320px;max-width:100%;height:auto;border-radius:8px;border:1px solid #222;" />
 </div>
 
 ### Raporlar
 <div align="center">
-	<img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%285%29.jpeg" alt="Raporlar" style="max-width:480px;width:100%;height:auto;border-radius:8px;border:1px solid #222;" />
+	<img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%285%29.jpeg" alt="Raporlar" style="width:320px;max-width:100%;height:auto;border-radius:8px;border:1px solid #222;" />
 </div>
 
 ### Ayarlar
 <div align="center">
-	<img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%286%29.jpeg" alt="Ayarlar" style="max-width:480px;width:100%;height:auto;border-radius:8px;border:1px solid #222;" />
+	<img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%286%29.jpeg" alt="Ayarlar" style="width:320px;max-width:100%;height:auto;border-radius:8px;border:1px solid #222;" />
 </div>
 
 ### Profil ve Sekmeler
 <div align="center">
-	<img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%284%29.jpeg" alt="Profil ve Sekmeler" style="max-width:480px;width:100%;height:auto;border-radius:8px;border:1px solid #222;" />
+	<img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%284%29.jpeg" alt="Profil ve Sekmeler" style="width:320px;max-width:100%;height:auto;border-radius:8px;border:1px solid #222;" />
 </div>
 
 ### Orijinal Yüksek Çözünürlük
