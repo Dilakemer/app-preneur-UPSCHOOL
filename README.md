@@ -61,42 +61,19 @@ Proje ile ilgili detaylı teknik belgelere `/prodocs` klasöründen ulaşabilirs
 ---
 *Hazırlayan: Dila KEMER*
 
-## 🖼️ Ekran Görüntüleri (Galeri)
-Uygulamanın ana ekranlarından seçilmiş küçük bir galeri — tıklayarak yüksek çözünürlüklü orijinalleri görebilirsiniz.
+## 🖼️ Ekran Görüntüleri
+Aşağıdaki görseller alt alta düzenlendi — her biri tek satırda gösterilir. (Tıklayarak yüksek çözünürlüklü orijinalleri açabilirsiniz.)
 
-<div style="display:flex;flex-wrap:wrap;gap:14px;justify-content:center;">
-  <figure style="width:260px;margin:0;text-align:center;">
-    <a href="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%281%29.jpeg"><img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%281%29.jpeg" alt="Araç Ekle" width="260" style="border-radius:8px;" /></a>
-    <figcaption style="color:#9aa0a6;font-size:13px;margin-top:6px;">Araç Ekleme - Form ve tercih</figcaption>
-  </figure>
+### Raporlar Ekranı
+![Raporlar Ekranı](screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%285%29.jpeg)
 
-  <figure style="width:260px;margin:0;text-align:center;">
-    <a href="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%282%29.jpeg"><img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%282%29.jpeg" alt="Araç Ekle 2" width="260" style="border-radius:8px;" /></a>
-    <figcaption style="color:#9aa0a6;font-size:13px;margin-top:6px;">Araç Ekleme - Bilgi doğrulama</figcaption>
-  </figure>
+### Ayarlar
+![Ayarlar](screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%286%29.jpeg)
 
-  <figure style="width:260px;margin:0;text-align:center;">
-    <a href="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%283%29.jpeg"><img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%283%29.jpeg" alt="Dashboard" width="260" style="border-radius:8px;" /></a>
-    <figcaption style="color:#9aa0a6;font-size:13px;margin-top:6px;">Ana Ekran / Dashboard</figcaption>
-  </figure>
+### Profil ve Sekmeler
+![Profil ve Sekmeler](screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%283%29.jpeg)
 
-  <figure style="width:260px;margin:0;text-align:center;">
-    <a href="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%284%29.jpeg"><img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%284%29.jpeg" alt="Raporlar" width="260" style="border-radius:8px;" /></a>
-    <figcaption style="color:#9aa0a6;font-size:13px;margin-top:6px;">Raporlar Ekranı</figcaption>
-  </figure>
-
-  <figure style="width:260px;margin:0;text-align:center;">
-    <a href="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%285%29.jpeg"><img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%285%29.jpeg" alt="Ayarlar" width="260" style="border-radius:8px;" /></a>
-    <figcaption style="color:#9aa0a6;font-size:13px;margin-top:6px;">Ayarlar</figcaption>
-  </figure>
-
-  <figure style="width:260px;margin:0;text-align:center;">
-    <a href="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%286%29.jpeg"><img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%286%29.jpeg" alt="Profil" width="260" style="border-radius:8px;" /></a>
-    <figcaption style="color:#9aa0a6;font-size:13px;margin-top:6px;">Profil ve Sekmeler</figcaption>
-  </figure>
-</div>
-
-Yüksek çözünürlüklü orijinalleri bu bağlantıdan indirebilirsiniz: [WhatsApp Images ZIP](screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53.jpeg)
+Yüksek çözünürlüklü orijinalleri bu başlık altında mevcuttur: WhatsApp Images ZIP (eklenmiş, açılmamış)
 
 ## Sigorta Karşılaştırma Özelliği
 - Özellik: `Sigorta Fiyatlarını Karşılaştır` ekranı eklendi — işlev hem "affiliate/tahmini" modu (kayıt olmadan çalışır) hem de isteğe bağlı gerçek sağlayıcı entegrasyonlarını destekler.
