@@ -62,30 +62,15 @@ Proje ile ilgili detaylı teknik belgelere `/prodocs` klasöründen ulaşabilirs
 *Hazırlayan: Dila KEMER*
 
 ## 🖼️ Ekran Görüntüleri
-Aşağıdaki görseller alt alta düzenlendi — her biri tek satırda gösterilir. (Tıklayarak yüksek çözünürlüklü orijinalleri açabilirsiniz.)
-### 1 — Araç Ekleme (form)
-<div align="center">
-  <img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%281%29.jpeg" alt="Araç Ekle 1" style="width:320px;max-width:100%;height:auto;border-radius:8px;border:1px solid #222;" />
-</div>
+Tüm ekran görüntüleri aşağıda — başlıklar ve açıklamalar siz tarafından eklenebilir.
 
-### 2 — Araçlarım
 <div align="center">
-  <img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%282%29.jpeg" alt="Araçlarım" style="width:320px;max-width:100%;height:auto;border-radius:8px;border:1px solid #222;" />
-</div>
-
-### 3 — Ayarlar
-<div align="center">
-  <img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%283%29.jpeg" alt="Ayarlar" style="width:320px;max-width:100%;height:auto;border-radius:8px;border:1px solid #222;" />
-</div>
-
-### 4 — Profil Ayarları
-<div align="center">
-  <img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%284%29.jpeg" alt="Profil Ayarları" style="width:320px;max-width:100%;height:auto;border-radius:8px;border:1px solid #222;" />
-</div>
-
-### 5 — Profil & Sigorta Kıyaslama
-<div align="center">
-  <img src="screenshoots/WhatsApp%20Image%202026-06-05%20at%2011.13.53%20%285%29.jpeg" alt="Profil ve Sigorta Kıyaslama" style="width:320px;max-width:100%;height:auto;border-radius:8px;border:1px solid #222;" />
+  <img src="screenshoots/WhatsApp Image 2026-06-05 at 11.13.53 (2).jpeg" alt="screenshot-2" style="width:300px;max-width:100%;height:auto;border-radius:6px;border:1px solid #222;margin:8px 0;" />
+  <img src="screenshoots/WhatsApp Image 2026-06-05 at 11.13.53 (3).jpeg" alt="screenshot-3" style="width:300px;max-width:100%;height:auto;border-radius:6px;border:1px solid #222;margin:8px 0;" />
+  <img src="screenshoots/WhatsApp Image 2026-06-05 at 11.13.53 (4).jpeg" alt="screenshot-4" style="width:300px;max-width:100%;height:auto;border-radius:6px;border:1px solid #222;margin:8px 0;" />
+  <img src="screenshoots/WhatsApp Image 2026-06-05 at 11.13.53 (5).jpeg" alt="screenshot-5" style="width:300px;max-width:100%;height:auto;border-radius:6px;border:1px solid #222;margin:8px 0;" />
+  <img src="screenshoots/WhatsApp Image 2026-06-05 at 11.13.53 (6).jpeg" alt="screenshot-6" style="width:300px;max-width:100%;height:auto;border-radius:6px;border:1px solid #222;margin:8px 0;" />
+  <img src="screenshoots/WhatsApp Image 2026-06-05 at 11.13.53.jpeg" alt="screenshot-original" style="width:300px;max-width:100%;height:auto;border-radius:6px;border:1px solid #222;margin:8px 0;" />
 </div>
 
 ## Sigorta Karşılaştırma Özelliği
