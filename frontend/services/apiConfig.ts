@@ -4,6 +4,7 @@ import { Platform } from 'react-native';
 
 const API_PORT = '3001';
 const API_PATH = '/api';
+const PRODUCTION_API_URL = 'https://caremind-api.onrender.com/api';
 
 const trimTrailingSlash = (value: string) => value.replace(/\/+$/, '');
 
@@ -44,6 +45,10 @@ const normalizeForAndroidEmulator = (url: string) => {
 export const getApiUrl = () => {
   const envUrl = process.env.EXPO_PUBLIC_API_URL?.trim();
   if (envUrl) return normalizeForAndroidEmulator(envUrl);
+
+  if (Platform.OS === 'web') {
+    return PRODUCTION_API_URL;
+  }
 
   const expoHost = getExpoHost();
   if (expoHost) {

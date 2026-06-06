@@ -1,5 +1,5 @@
 import { Stack } from 'expo-router';
 
 export default function AracLayout() {
-  return <Stack />;
+  return <Stack screenOptions={{ headerShown: false }} />;
 }

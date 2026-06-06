@@ -15,6 +15,11 @@ const getDepolamaAnahtari = async (): Promise<string> => {
   return eposta ? `${UYGULAMA_PREFIX}:araclar:${eposta.trim().toLowerCase()}` : `${UYGULAMA_PREFIX}:araclar:guest`;
 };
 
+const getKullaniciEpostasi = async () => {
+  const eposta = await AsyncStorage.getItem('@caremind:kayitliEposta');
+  return eposta?.trim() || null;
+};
+
 const getHeaders = async () => {
   const eposta = await AsyncStorage.getItem('@caremind:kayitliEposta');
   return {
@@ -61,6 +66,11 @@ export const saveAraclar = async (araclar: Arac[]) => {
 };
 
 export const addArac = async (data: AracInput): Promise<Arac> => {
+  const eposta = await getKullaniciEpostasi();
+  if (!eposta) {
+    throw new Error('Araç eklemek için giriş yapmanız gerekiyor');
+  }
+
   const headers = await getHeaders();
   
   try {
@@ -80,7 +90,15 @@ export const addArac = async (data: AracInput): Promise<Arac> => {
         return yeniArac;
       }
     }
+
+    if (res.status === 401) {
+      throw new Error('Araç eklemek için giriş yapmanız gerekiyor');
+    }
   } catch (error) {
+    if (error instanceof Error && error.message.includes('giriş yapmanız gerekiyor')) {
+      throw error;
+    }
+
     console.warn('API addArac hatası, yerel olarak kaydediliyor:', error);
   }
 
@@ -104,6 +122,11 @@ export const addArac = async (data: AracInput): Promise<Arac> => {
 };
 
 export const updateArac = async (arac: Arac) => {
+  const eposta = await getKullaniciEpostasi();
+  if (!eposta) {
+    throw new Error('Araç güncellemek için giriş yapmanız gerekiyor');
+  }
+
   const headers = await getHeaders();
   let guncellenecekArac = { ...arac, guncellemeTarihi: new Date().toISOString() };
   try {
@@ -116,7 +139,15 @@ export const updateArac = async (arac: Arac) => {
       const json = await res.json();
       if (json.success) guncellenecekArac = json.data;
     }
+
+    if (res.status === 401) {
+      throw new Error('Araç güncellemek için giriş yapmanız gerekiyor');
+    }
   } catch (error) {
+    if (error instanceof Error && error.message.includes('giriş yapmanız gerekiyor')) {
+      throw error;
+    }
+
     console.warn('API updateArac hatası, yerel olarak güncelleniyor:', error);
   }
 
@@ -128,10 +159,22 @@ export const updateArac = async (arac: Arac) => {
 };
 
 export const deleteArac = async (id: string) => {
+  const eposta = await getKullaniciEpostasi();
+  if (!eposta) {
+    throw new Error('Araç silmek için giriş yapmanız gerekiyor');
+  }
+
   const headers = await getHeaders();
   try {
-    await fetch(`${API_URL}/araclar/${id}`, { method: 'DELETE', headers });
+    const res = await fetch(`${API_URL}/araclar/${id}`, { method: 'DELETE', headers });
+    if (res.status === 401) {
+      throw new Error('Araç silmek için giriş yapmanız gerekiyor');
+    }
   } catch (error) {
+    if (error instanceof Error && error.message.includes('giriş yapmanız gerekiyor')) {
+      throw error;
+    }
+
     console.warn('API deleteArac hatası, yerel olarak siliniyor:', error);
   }
 
@@ -207,6 +250,11 @@ export const clearTumBildirimKayitlari = async () => {
 };
 
 export const clearTumVeriler = async () => {
+  const eposta = await getKullaniciEpostasi();
+  if (!eposta) {
+    throw new Error('Verileri silmek için giriş yapmanız gerekiyor');
+  }
+
   const headers = await getHeaders();
 
   try {

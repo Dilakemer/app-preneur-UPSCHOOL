@@ -20,6 +20,11 @@ import type { Arac, AracInput } from './types';
 const router = Router();
 const ADMIN_API_KEY = process.env.ADMIN_API_KEY;
 
+const getUserEmail = (req: Request) => {
+  const eposta = req.headers['x-user-email'];
+  return typeof eposta === 'string' && eposta.trim() ? eposta.trim() : null;
+};
+
 const adminYetkiliMi = (req: Request) => {
   const headerKey = req.headers['x-admin-api-key'];
   const authHeader = req.headers.authorization;
@@ -64,7 +69,12 @@ router.get('/araclar/plaka/:plaka', asyncHandler(async (req: Request, res: Respo
 
 // POST /api/araclar - Yeni araç ekle
 router.post('/araclar', asyncHandler(async (req: Request, res: Response) => {
-  const eposta = req.headers['x-user-email'] as string | undefined;
+  const eposta = getUserEmail(req);
+
+  if (!eposta) {
+    return errorResponse(res, 'Araç eklemek için giriş yapmanız gerekiyor', 401);
+  }
+
   const validation = validateAracInput(req.body);
 
   if (!validation.valid) {
@@ -85,7 +95,12 @@ router.post('/araclar', asyncHandler(async (req: Request, res: Response) => {
 
 // PUT /api/araclar/:id - Araç güncelle
 router.put('/araclar/:id', asyncHandler(async (req: Request, res: Response) => {
-  const eposta = req.headers['x-user-email'] as string | undefined;
+  const eposta = getUserEmail(req);
+
+  if (!eposta) {
+    return errorResponse(res, 'Araç güncellemek için giriş yapmanız gerekiyor', 401);
+  }
+
   const validation = validateAracInput(req.body);
 
   if (!validation.valid) {
@@ -114,7 +129,12 @@ router.put('/araclar/:id', asyncHandler(async (req: Request, res: Response) => {
 
 // DELETE /api/araclar/:id - Araç sil
 router.delete('/araclar/:id', asyncHandler(async (req: Request, res: Response) => {
-  const eposta = req.headers['x-user-email'] as string | undefined;
+  const eposta = getUserEmail(req);
+
+  if (!eposta) {
+    return errorResponse(res, 'Araç silmek için giriş yapmanız gerekiyor', 401);
+  }
+
   const silinmiş = deleteArac(req.params.id, eposta);
 
   if (!silinmiş) {

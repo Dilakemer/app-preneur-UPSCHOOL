@@ -4,7 +4,7 @@ import React, { useMemo, useState } from 'react';
 import { ActivityIndicator, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { renkler } from '../constants/renkler';
 import { useAraclar } from '../hooks/useAraclar';
-import { internetBaglantisiVarMi, sigortaTeklifURLiOlustur } from '../services/sigortaService';
+import { sigortaTeklifURLiOlustur } from '../services/sigortaService';
 
 export default function SigortaTeklifiScreen() {
   const router = useRouter();
@@ -21,18 +21,6 @@ export default function SigortaTeklifiScreen() {
     setAciliyor(true);
 
     try {
-      const online = await internetBaglantisiVarMi();
-      if (!online) {
-        setHata('Internet baglantisi bulunamadi. Baglantinizi kontrol edip tekrar deneyin.');
-        return;
-      }
-
-      const destekleniyor = await Linking.canOpenURL(teklifUrl);
-      if (!destekleniyor) {
-        setHata('Teklif sayfasi bu cihazda acilamadi.');
-        return;
-      }
-
       await Linking.openURL(teklifUrl);
     } catch {
       setHata('Teklif sayfasi acilirken bir sorun olustu.');
