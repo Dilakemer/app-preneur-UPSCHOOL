@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: caremind-web
+    env: static
+    rootDir: .
+    buildCommand: npm ci && npm run build:web
+    staticPublishPath: dist
+    autoDeploy: true
+    envVars:
+      - key: EXPO_PUBLIC_API_URL
+        value: https://caremind-api.onrender.com/api
