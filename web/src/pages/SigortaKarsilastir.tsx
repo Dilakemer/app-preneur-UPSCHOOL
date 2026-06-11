@@ -1,16 +1,63 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAraclar } from '../contexts/AraclarContext';
+import type { Arac } from '../types/Arac';
 
-type Insurer = { id: string; name: string; base: number; rating: number };
+type Insurer = { id: string; name: string; base: number; rating: number; quoteUrl: string };
 
 const INSURERS: Insurer[] = [
-  { id: 'allianz', name: 'Allianz', base: 1800, rating: 4.6 },
-  { id: 'aksigorta', name: 'Aksigorta', base: 1750, rating: 4.3 },
-  { id: 'anadolu', name: 'Anadolu Sigorta', base: 1900, rating: 4.5 },
-  { id: 'groupama', name: 'Groupama', base: 1700, rating: 4.1 },
-  { id: 'mapfre', name: 'Mapfre', base: 1650, rating: 4.0 },
+  {
+    id: 'allianz',
+    name: 'Allianz',
+    base: 1800,
+    rating: 4.6,
+    quoteUrl: 'https://www.allianz.com.tr/tr_TR/urunler/arac-sigortalari/trafik-sigortasi.html',
+  },
+  {
+    id: 'aksigorta',
+    name: 'Aksigorta',
+    base: 1750,
+    rating: 4.3,
+    quoteUrl: 'https://www.aksigorta.com.tr/trafik-sigortasi',
+  },
+  {
+    id: 'anadolu',
+    name: 'Anadolu Sigorta',
+    base: 1900,
+    rating: 4.5,
+    quoteUrl: 'https://www.anadolusigorta.com.tr/trafik-sigortasi',
+  },
+  {
+    id: 'groupama',
+    name: 'Groupama',
+    base: 1700,
+    rating: 4.1,
+    quoteUrl: 'https://www.groupama.com.tr/',
+  },
+  {
+    id: 'mapfre',
+    name: 'Mapfre',
+    base: 1650,
+    rating: 4.0,
+    quoteUrl: 'https://www.mapfre.com.tr/sigorta/tr-tr/kisisel/arac-sigortalari/trafik-sigortasi/',
+  },
 ];
+
+const teklifLinkiOlustur = (insurer: Insurer, arac?: Arac) => {
+  const url = new URL(insurer.quoteUrl);
+  url.searchParams.set('utm_source', 'caremind');
+  url.searchParams.set('utm_medium', 'web');
+  url.searchParams.set('utm_campaign', 'sigorta_karsilastirma');
+
+  if (arac) {
+    url.searchParams.set('plaka', arac.plaka);
+    url.searchParams.set('marka', arac.marka);
+    url.searchParams.set('model', arac.model);
+    url.searchParams.set('yil', String(arac.yil));
+  }
+
+  return url.toString();
+};
 
 export default function SigortaKarsilastir() {
   const { araclar } = useAraclar();
@@ -25,8 +72,8 @@ export default function SigortaKarsilastir() {
     })).sort((a, b) => a.price - b.price);
   }, [arac]);
 
-  const handleTeklifAl = (_insurerId: string) => {
-    window.open('https://www.sigortam.net/', '_blank');
+  const handleTeklifAl = (teklif: Insurer) => {
+    window.open(teklifLinkiOlustur(teklif, arac), '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -61,7 +108,7 @@ export default function SigortaKarsilastir() {
           <div
             key={teklif.id}
             className="insurance-card"
-            onClick={() => handleTeklifAl(teklif.id)}
+            onClick={() => handleTeklifAl(teklif)}
             style={{
               animationDelay: `${i * 80}ms`,
               animation: `slideUp 0.4s ease ${i * 80}ms both`
