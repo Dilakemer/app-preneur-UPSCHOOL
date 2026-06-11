@@ -3,6 +3,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   KeyboardAvoidingView,
   Modal,
@@ -15,9 +16,11 @@ import {
   View,
 } from 'react-native';
 import { AracKarti } from '../../../components/AracKarti';
+import { TarihSatiri } from '../../../components/TarihSatiri';
 import { renkler } from '../../../constants/renkler';
 import { useAraclar } from '../../../hooks/useAraclar';
 import { aiService } from '../../../services/aiService';
+import { tuvturkIstasyonAc } from '../../../services/googleMapsService';
 import { enYakinTarihBul, tarihFormatla } from '../../../utils/tarihHesapla';
 
 interface ChatMessage {
@@ -37,6 +40,14 @@ export default function AracDetayScreen() {
   const [mesajlar, setMesajlar] = useState<ChatMessage[]>([]);
   const [soru, setSoru] = useState('');
   const [aiCevapliyor, setAiCevapliyor] = useState(false);
+
+  const handleIstasyonBul = async () => {
+    try {
+      await tuvturkIstasyonAc();
+    } catch {
+      Alert.alert('Harita acilamadi', 'TUVTURK istasyon aramasi baslatilamadi.');
+    }
+  };
 
   const handleChatAc = () => {
     if (mesajlar.length === 0) {
@@ -130,12 +141,29 @@ export default function AracDetayScreen() {
           </View>
         </View>
 
+        <View style={styles.tarihListesi}>
+          <TarihSatiri
+            kategori="muayene"
+            tarih={arac.muayeneTarihi}
+            aksiyonEtiketi="Istasyon Bul"
+            onAction={handleIstasyonBul}
+          />
+          <TarihSatiri
+            kategori="sigorta"
+            tarih={arac.sigortaTarihi}
+            aksiyonEtiketi="Teklif Al"
+            onAction={() => router.push(`/sigorta-karsilastir?aracId=${arac.id}`)}
+          />
+          <TarihSatiri kategori="kasko" tarih={arac.kaskoTarihi} />
+          <TarihSatiri kategori="bakim" tarih={arac.bakimTarihi} />
+        </View>
+
         <Pressable style={styles.primaryButton} onPress={() => router.push(`/arac/${arac.id}/duzenle`)}>
           <Feather name="edit-2" size={18} color={renkler.beyaz} style={{ marginRight: 8 }} />
           <Text style={styles.primaryText}>Bilgileri Duzenle</Text>
         </Pressable>
 
-        <Pressable style={styles.secondaryButton} onPress={() => router.push(`/sigorta-teklifi?aracId=${arac.id}`)}>
+        <Pressable style={styles.secondaryButton} onPress={() => router.push(`/sigorta-karsilastir?aracId=${arac.id}`)}>
           <Feather name="shield" size={18} color={renkler.vurgu} style={{ marginRight: 8 }} />
           <Text style={styles.secondaryText}>Sigorta Teklifi Al</Text>
         </Pressable>
@@ -254,6 +282,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: { fontSize: 20, fontWeight: '800', color: renkler.metin },
   infoCardsRow: { flexDirection: 'row', gap: 16 },
+  tarihListesi: { gap: 12 },
   infoCard: {
     flex: 1,
     backgroundColor: renkler.kart,

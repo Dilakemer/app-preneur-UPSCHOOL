@@ -8,6 +8,9 @@ const AI_TIMEOUT_MS = 14000;
 const FALLBACK_MESAJI =
   'AI danismanina su an ulasilamiyor. Internet baglantinizi ve sunucu ayarlarini kontrol edin.';
 
+const GENEL_FALLBACK_MESAJI =
+  'Arac eklemeden de baslayabiliriz: sigorta, muayene, kasko ve bakim tarihlerini tek yerde tutmani oneririm. Aracini eklediginde tarih risklerini ve bakim onceliklerini daha net yorumlayabilirim.';
+
 const getHeaders = async () => {
   const eposta = await AsyncStorage.getItem('@caremind:kayitliEposta');
 
@@ -41,6 +44,46 @@ export const aiService = {
     } catch (error: any) {
       console.error('[aiService] Hata:', error?.message ?? error);
       return FALLBACK_MESAJI;
+    } finally {
+      clearTimeout(timeout);
+    }
+  },
+
+  getGenelTavsiye: async (soru: string, tip: AITip = 'tavsiye'): Promise<string> => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), AI_TIMEOUT_MS);
+
+    try {
+      const headers = await getHeaders();
+      const res = await fetch(`${API_URL}/ai/tavsiye?tip=${encodeURIComponent(tip)}`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          genel: true,
+          soru: soru.trim(),
+          konu: 'Kullanici henuz arac eklemedi. Genel arac bakimi, sigorta ve takip tavsiyesi ver.',
+          marka: 'Genel',
+          model: 'Arac',
+          yil: new Date().getFullYear(),
+          plaka: 'GENEL',
+          muayeneTarihi: null,
+          sigortaTarihi: null,
+          kaskoTarihi: null,
+          bakimTarihi: null,
+        }),
+        signal: controller.signal,
+      });
+
+      const json = await res.json().catch(() => null);
+
+      if (!res.ok || !json?.success || typeof json.data?.tavsiye !== 'string') {
+        throw new Error(json?.error ?? `AI API hata kodu: ${res.status}`);
+      }
+
+      return json.data.tavsiye.trim();
+    } catch (error: any) {
+      console.error('[aiService] Genel AI hata:', error?.message ?? error);
+      return GENEL_FALLBACK_MESAJI;
     } finally {
       clearTimeout(timeout);
     }
