@@ -1,5 +1,7 @@
 import type { Arac, TarihKategorisi } from '../types/Arac';
 
+const GUN_MS = 24 * 60 * 60 * 1000;
+
 export interface EnYakinTarihSonucu {
   tarih: string;
   kategori: TarihKategorisi;
@@ -9,6 +11,16 @@ export interface EnYakinTarihSonucu {
 export const tarihStringiniDateYap = (deger: string): Date => {
   const [yil, ay, gun] = deger.split('-').map(Number);
   return new Date(yil, ay - 1, gun);
+};
+
+const tarihStringiniUtcGunZamaninaCevir = (deger: string): number => {
+  const [yil, ay, gun] = deger.split('-').map(Number);
+  return Date.UTC(yil, ay - 1, gun);
+};
+
+const bugununUtcGunZamani = (): number => {
+  const bugun = new Date();
+  return Date.UTC(bugun.getFullYear(), bugun.getMonth(), bugun.getDate());
 };
 
 export const dateiTarihStringineCevir = (date: Date): string => {
@@ -24,11 +36,7 @@ export const tarihFormatla = (tarih: string): string => {
 };
 
 export const kalanGunHesapla = (tarih: string): number => {
-  const hedef = tarihStringiniDateYap(tarih);
-  const bugun = new Date();
-  bugun.setHours(0, 0, 0, 0);
-  hedef.setHours(0, 0, 0, 0);
-  return Math.ceil((hedef.getTime() - bugun.getTime()) / (1000 * 60 * 60 * 24));
+  return Math.round((tarihStringiniUtcGunZamaninaCevir(tarih) - bugununUtcGunZamani()) / GUN_MS);
 };
 
 export const kalanGunMetni = (kalanGun: number): string => {
@@ -51,7 +59,7 @@ export const enYakinTarihBul = (arac: Arac): EnYakinTarihSonucu | null => {
   for (const { key, tarih } of kategoriler) {
     if (!tarih) continue;
     const kalanGun = kalanGunHesapla(tarih);
-    if (!enYakin || kalanGun < enYakin.kalanGun) {
+    if (!enYakin || Math.abs(kalanGun) < Math.abs(enYakin.kalanGun)) {
       enYakin = { tarih, kategori: key, kalanGun };
     }
   }
@@ -73,5 +81,5 @@ export const tumTarihleriBul = (arac: Arac): EnYakinTarihSonucu[] => {
     sonuclar.push({ tarih, kategori: key, kalanGun: kalanGunHesapla(tarih) });
   }
 
-  return sonuclar.sort((a, b) => a.kalanGun - b.kalanGun);
+  return sonuclar.sort((a, b) => Math.abs(a.kalanGun) - Math.abs(b.kalanGun));
 };

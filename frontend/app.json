@@ -16,7 +16,8 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.dilakemer.caremind",
       "infoPlist": {
-        "NSUserNotificationsUsageDescription": "CareMind, arac muayene, sigorta, kasko ve bakim tarihleri yaklastiginda hatirlatici gonderir."
+        "NSUserNotificationsUsageDescription": "CareMind, arac muayene, sigorta, kasko ve bakim tarihleri yaklastiginda hatirlatici gonderir.",
+        "NSLocationWhenInUseUsageDescription": "Yakindaki TUVTURK istasyonlarini bulmak icin konumunuz kullanilir."
       }
     },
     "android": {
@@ -44,6 +45,12 @@
         {
           "color": "#6366F1",
           "defaultChannel": "caremind-hatirlatici"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Yakindaki TUVTURK istasyonlarini bulmak icin konumunuz kullanilir."
         }
       ]
     ]

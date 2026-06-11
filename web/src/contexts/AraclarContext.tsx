@@ -9,6 +9,7 @@ import {
 } from 'react';
 import type { Arac, AracInput } from '../types/Arac';
 import { apiGet, apiPost, apiPut, apiDelete } from '../config/api';
+import { useAuth } from './AuthContext';
 
 interface AraclarContextValue {
   araclar: Arac[];
@@ -24,120 +25,98 @@ interface AraclarContextValue {
 const AraclarContext = createContext<AraclarContextValue | undefined>(undefined);
 
 const STORAGE_KEY = '@caremind:araclar';
+const GIRIS_GEREKLI_HATASI = 'Bu islem icin giris yapmaniz gerekiyor.';
 
-const getLocalAraclar = (): Arac[] => {
+const storageKeyFor = (email: string) => `${STORAGE_KEY}:${email.trim().toLowerCase()}`;
+
+const getLocalAraclar = (email: string): Arac[] => {
   try {
-    const json = localStorage.getItem(STORAGE_KEY);
+    const json = localStorage.getItem(storageKeyFor(email));
     return json ? JSON.parse(json) : [];
   } catch {
     return [];
   }
 };
 
-const saveLocalAraclar = (araclar: Arac[]) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(araclar));
+const saveLocalAraclar = (email: string, araclar: Arac[]) => {
+  localStorage.setItem(storageKeyFor(email), JSON.stringify(araclar));
 };
 
 export function AraclarProvider({ children }: { children: ReactNode }) {
+  const { isLoggedIn, email } = useAuth();
   const [araclar, setAraclar] = useState<Arac[]>([]);
   const [yukleniyor, setYukleniyor] = useState(true);
 
+  const girisKontrolEt = useCallback(() => {
+    if (!isLoggedIn || !email) {
+      throw new Error(GIRIS_GEREKLI_HATASI);
+    }
+  }, [email, isLoggedIn]);
+
   const yenile = useCallback(async () => {
+    if (!isLoggedIn || !email) {
+      setAraclar([]);
+      setYukleniyor(false);
+      return;
+    }
+
+    setYukleniyor(true);
     try {
-      const email = localStorage.getItem('@caremind:kayitliEposta');
-      if (email) {
-        const data = await apiGet<Arac[]>('/araclar');
-        setAraclar(data);
-        saveLocalAraclar(data);
-      } else {
-        setAraclar(getLocalAraclar());
-      }
+      const data = await apiGet<Arac[]>('/araclar');
+      setAraclar(data);
+      saveLocalAraclar(email, data);
     } catch {
-      setAraclar(getLocalAraclar());
+      setAraclar(getLocalAraclar(email));
     } finally {
       setYukleniyor(false);
     }
-  }, []);
+  }, [email, isLoggedIn]);
 
   useEffect(() => {
     yenile();
   }, [yenile]);
 
   const araciEkle = useCallback(async (data: AracInput): Promise<Arac> => {
-    const email = localStorage.getItem('@caremind:kayitliEposta');
-    if (email) {
-      try {
-        const yeni = await apiPost<Arac>('/araclar', data);
-        setAraclar(prev => {
-          const guncel = [yeni, ...prev.filter(a => a.id !== yeni.id)];
-          saveLocalAraclar(guncel);
-          return guncel;
-        });
-        return yeni;
-      } catch (error) {
-        if (error instanceof Error && error.message.includes('giriş')) throw error;
-      }
-    }
-    // offline fallback
-    const zaman = new Date().toISOString();
-    const yeniArac: Arac = {
-      ...data,
-      id: crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-      olusturmaTarihi: zaman,
-      guncellemeTarihi: zaman,
-    };
+    girisKontrolEt();
+
+    const yeni = await apiPost<Arac>('/araclar', data);
     setAraclar(prev => {
-      const guncel = [yeniArac, ...prev];
-      saveLocalAraclar(guncel);
+      const guncel = [yeni, ...prev.filter(a => a.id !== yeni.id)];
+      saveLocalAraclar(email, guncel);
       return guncel;
     });
-    return yeniArac;
-  }, []);
+    return yeni;
+  }, [email, girisKontrolEt]);
 
   const araciGuncelle = useCallback(async (arac: Arac) => {
-    const email = localStorage.getItem('@caremind:kayitliEposta');
-    let guncelArac = { ...arac, guncellemeTarihi: new Date().toISOString() };
-    if (email) {
-      try {
-        guncelArac = await apiPut<Arac>(`/araclar/${arac.id}`, arac);
-      } catch (error) {
-        if (error instanceof Error && error.message.includes('giriş')) throw error;
-      }
-    }
+    girisKontrolEt();
+
+    const guncelArac = await apiPut<Arac>(`/araclar/${arac.id}`, arac);
     setAraclar(prev => {
       const guncel = prev.map(a => a.id === guncelArac.id ? guncelArac : a);
-      saveLocalAraclar(guncel);
+      saveLocalAraclar(email, guncel);
       return guncel;
     });
-  }, []);
+  }, [email, girisKontrolEt]);
 
   const araciSil = useCallback(async (id: string) => {
-    const email = localStorage.getItem('@caremind:kayitliEposta');
-    if (email) {
-      try {
-        await apiDelete(`/araclar/${id}`);
-      } catch (error) {
-        if (error instanceof Error && error.message.includes('giriş')) throw error;
-      }
-    }
+    girisKontrolEt();
+
+    await apiDelete(`/araclar/${id}`);
     setAraclar(prev => {
       const guncel = prev.filter(a => a.id !== id);
-      saveLocalAraclar(guncel);
+      saveLocalAraclar(email, guncel);
       return guncel;
     });
-  }, []);
+  }, [email, girisKontrolEt]);
 
   const tumVerileriSil = useCallback(async () => {
-    const email = localStorage.getItem('@caremind:kayitliEposta');
-    if (email) {
-      try {
-        await apiDelete('/yonetim/tum-veriler');
-      } catch { /* ignore */ }
-    }
-    const keys = Object.keys(localStorage).filter(k => k.startsWith('@caremind'));
-    keys.forEach(k => localStorage.removeItem(k));
+    girisKontrolEt();
+
+    await apiDelete('/yonetim/tum-veriler');
+    localStorage.removeItem(storageKeyFor(email));
     setAraclar([]);
-  }, []);
+  }, [email, girisKontrolEt]);
 
   const aracGetir = useCallback((id: string) => araclar.find(a => a.id === id), [araclar]);
 

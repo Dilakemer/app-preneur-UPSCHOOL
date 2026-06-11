@@ -18,9 +18,9 @@ export const AracKarti = ({ arac, onPress }: AracKartiProps) => {
 
   const getDurumRengi = (durum: string) => {
     switch (durum) {
-      case 'acil': return renkler.kirmizi;
-      case 'yaklasiyor': return renkler.sari;
-      case 'rahat': return renkler.yesil;
+      case 'red': return renkler.kirmizi;
+      case 'yellow': return renkler.sari;
+      case 'green': return renkler.yesil;
       default: return renkler.cizgi;
     }
   };

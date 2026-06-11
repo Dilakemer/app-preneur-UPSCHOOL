@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
 import Sidebar from './Sidebar';
+import OnboardingTour from './OnboardingTour';
 
 const MOBILE_NAV = [
   { to: '/', label: 'Araclar', icon: 'A' },
@@ -24,6 +25,8 @@ export default function Layout() {
       <main className="app-content animate-fadeIn">
         <Outlet />
       </main>
+
+      <OnboardingTour />
 
       <nav className="mobile-nav">
         <div className="mobile-nav-inner">

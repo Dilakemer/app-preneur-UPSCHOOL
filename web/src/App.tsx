@@ -10,6 +10,7 @@ import Ayarlar from './pages/Ayarlar';
 import SigortaKarsilastir from './pages/SigortaKarsilastir';
 import Login from './pages/Login';
 import MobilDemo from './pages/MobilDemo';
+import ProtectedRoute from './components/ProtectedRoute';
 
 export default function App() {
   return (
@@ -21,7 +22,13 @@ export default function App() {
             <Route path="/giris" element={<Login />} />
 
             {/* Main app with sidebar layout */}
-            <Route element={<Layout />}>
+            <Route
+              element={
+                <ProtectedRoute>
+                  <Layout />
+                </ProtectedRoute>
+              }
+            >
               <Route path="/" element={<Dashboard />} />
               <Route path="/arac/ekle" element={<AracEkle />} />
               <Route path="/arac/:id" element={<AracDetay />} />

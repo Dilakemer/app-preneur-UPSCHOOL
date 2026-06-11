@@ -1,7 +1,16 @@
 const PRODUCTION_API_URL = 'https://caremind-api.onrender.com/api';
+const LOCAL_API_URL = 'http://localhost:3001/api';
+
+const defaultApiUrl = () => {
+  if (import.meta.env.DEV) {
+    return LOCAL_API_URL;
+  }
+
+  return PRODUCTION_API_URL;
+};
 
 export const API_URL: string =
-  import.meta.env.VITE_API_URL?.replace(/\/+$/, '') || PRODUCTION_API_URL;
+  import.meta.env.VITE_API_URL?.replace(/\/+$/, '') || defaultApiUrl();
 
 const getHeaders = (): HeadersInit => {
   const headers: Record<string, string> = {

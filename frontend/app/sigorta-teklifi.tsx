@@ -1,62 +1,81 @@
 import { Feather } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useMemo, useState } from 'react';
-import { ActivityIndicator, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { WebView } from 'react-native-webview';
 import { renkler } from '../constants/renkler';
 import { useAraclar } from '../hooks/useAraclar';
-import { sigortaTeklifURLiOlustur } from '../services/sigortaService';
+import { internetBaglantisiVarMi, sigortaTeklifURLiOlustur } from '../services/sigortaService';
 
 export default function SigortaTeklifiScreen() {
   const router = useRouter();
   const { aracId } = useLocalSearchParams<{ aracId?: string }>();
   const { aracGetir } = useAraclar();
   const arac = aracId ? aracGetir(aracId) : undefined;
-  const [aciliyor, setAciliyor] = useState(false);
+  const [kontrolEdiliyor, setKontrolEdiliyor] = useState(true);
   const [hata, setHata] = useState<string | null>(null);
 
   const teklifUrl = useMemo(() => (arac ? sigortaTeklifURLiOlustur(arac) : 'https://www.sigortam.net/'), [arac]);
 
-  const open = async () => {
-    setHata(null);
-    setAciliyor(true);
+  useEffect(() => {
+    let aktif = true;
 
-    try {
-      await Linking.openURL(teklifUrl);
-    } catch {
-      setHata('Teklif sayfasi acilirken bir sorun olustu.');
-    } finally {
-      setAciliyor(false);
-    }
-  };
+    const kontrolEt = async () => {
+      const baglantiVar = await internetBaglantisiVarMi();
+
+      if (!aktif) return;
+
+      if (!baglantiVar) {
+        Alert.alert('Internet baglantisi gerekli', 'Sigorta teklif sayfasini acmak icin internet baglantisi gerekiyor.', [
+          { text: 'Tamam', onPress: () => router.back() },
+        ]);
+      }
+
+      setKontrolEdiliyor(false);
+    };
+
+    kontrolEt();
+
+    return () => {
+      aktif = false;
+    };
+  }, [router]);
+
+  if (kontrolEdiliyor) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator color={renkler.vurgu} size="large" />
+        <Text style={styles.loadingText}>Teklif sayfasi hazirlaniyor...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
-      <Pressable onPress={() => router.back()} style={styles.backButton}>
-        <Feather name="arrow-left" size={22} color={renkler.metin} />
-      </Pressable>
-
-      <View style={styles.iconWrap}>
-        <Feather name="shield" size={44} color={renkler.vurgu} />
+      <View style={styles.header}>
+        <Pressable onPress={() => router.back()} style={styles.backButton}>
+          <Feather name="arrow-left" size={22} color={renkler.metin} />
+        </Pressable>
+        <View style={styles.headerTitleWrap}>
+          <Text style={styles.title}>Sigorta Teklifi</Text>
+          <Text style={styles.desc} numberOfLines={1}>
+            {arac ? `${arac.plaka} - ${arac.marka} ${arac.model}` : 'Genel teklif sayfasi'}
+          </Text>
+        </View>
       </View>
-      <Text style={styles.title}>Sigorta Teklifi</Text>
-      <Text style={styles.desc}>
-        {arac
-          ? `${arac.plaka} plakali ${arac.marka} ${arac.model} icin teklif sayfasina yonlendirileceksiniz.`
-          : 'Arac secilmedigi icin genel teklif sayfasina yonlendirileceksiniz.'}
-      </Text>
 
       {hata ? <Text style={styles.errorText}>{hata}</Text> : null}
 
-      <Pressable style={[styles.button, aciliyor && styles.buttonDisabled]} onPress={open} disabled={aciliyor}>
-        {aciliyor ? (
-          <ActivityIndicator color={renkler.beyaz} />
-        ) : (
-          <>
-            <Feather name="external-link" size={18} color={renkler.beyaz} style={{ marginRight: 8 }} />
-            <Text style={styles.buttonText}>Teklif Al</Text>
-          </>
+      <WebView
+        source={{ uri: teklifUrl }}
+        startInLoadingState
+        renderLoading={() => (
+          <View style={styles.webLoading}>
+            <ActivityIndicator color={renkler.vurgu} size="large" />
+          </View>
         )}
-      </Pressable>
+        onError={() => setHata('Teklif sayfasi yuklenirken bir sorun olustu.')}
+      />
     </View>
   );
 }
@@ -64,15 +83,29 @@ export default function SigortaTeklifiScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24,
     backgroundColor: renkler.arkaPlan,
   },
+  centered: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    backgroundColor: renkler.arkaPlan,
+    padding: 24,
+  },
+  loadingText: { color: renkler.metinIkincil, fontWeight: '600' },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    paddingTop: 52,
+    backgroundColor: renkler.arkaPlanKoyu,
+    borderBottomWidth: 1,
+    borderBottomColor: renkler.cizgi,
+  },
   backButton: {
-    position: 'absolute',
-    top: 54,
-    left: 20,
     width: 42,
     height: 42,
     borderRadius: 21,
@@ -80,34 +113,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  iconWrap: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: renkler.vurguSoluk,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 22,
-  },
-  title: { fontSize: 26, color: renkler.metin, marginBottom: 10, fontWeight: '800' },
-  desc: { marginBottom: 22, textAlign: 'center', color: renkler.metinIkincil, lineHeight: 22 },
+  headerTitleWrap: { flex: 1 },
+  title: { fontSize: 18, color: renkler.metin, fontWeight: '800' },
+  desc: { color: renkler.metinIkincil, lineHeight: 20, marginTop: 2 },
   errorText: {
     color: renkler.hata,
     fontSize: 14,
     fontWeight: '700',
-    marginBottom: 14,
+    padding: 12,
     textAlign: 'center',
   },
-  button: {
-    flexDirection: 'row',
-    backgroundColor: renkler.vurgu,
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    borderRadius: 16,
-    minWidth: 180,
+  webLoading: {
+    ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: renkler.arkaPlan,
   },
-  buttonDisabled: { opacity: 0.65 },
-  buttonText: { color: renkler.beyaz, fontWeight: '700', fontSize: 16 },
 });

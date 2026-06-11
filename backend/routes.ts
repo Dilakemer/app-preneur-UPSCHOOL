@@ -38,14 +38,21 @@ const adminYetkiliMi = (req: Request) => {
 
 // GET /api/araclar - Tüm araçları getir
 router.get('/araclar', asyncHandler(async (req: Request, res: Response) => {
-  const eposta = req.headers['x-user-email'] as string | undefined;
+  const eposta = getUserEmail(req);
+  if (!eposta) {
+    return successResponse(res, [], 'Giris yapilmadigi icin uzak arac kaydi dondurulmedi');
+  }
   const araclar = getAllAraclar(eposta);
   return successResponse(res, araclar, `${araclar.length} araç bulundu`);
 }));
 
 // GET /api/araclar/:id - ID ile araç getir
 router.get('/araclar/:id', asyncHandler(async (req: Request, res: Response) => {
-  const eposta = req.headers['x-user-email'] as string | undefined;
+  const eposta = getUserEmail(req);
+  if (!eposta) {
+    return errorResponse(res, 'Arac bilgisi icin giris gerekli', 401);
+  }
+
   const arac = getAracById(req.params.id, eposta);
 
   if (!arac) {
@@ -57,7 +64,11 @@ router.get('/araclar/:id', asyncHandler(async (req: Request, res: Response) => {
 
 // GET /api/araclar/plaka/:plaka - Plaka ile araç getir
 router.get('/araclar/plaka/:plaka', asyncHandler(async (req: Request, res: Response) => {
-  const eposta = req.headers['x-user-email'] as string | undefined;
+  const eposta = getUserEmail(req);
+  if (!eposta) {
+    return errorResponse(res, 'Arac bilgisi icin giris gerekli', 401);
+  }
+
   const arac = getAracByPlaka(req.params.plaka, eposta);
 
   if (!arac) {
@@ -172,7 +183,14 @@ router.put('/ayarlar/bildirim-saati', asyncHandler(async (req: Request, res: Res
 
 // GET /api/raporlar/bildirim - Bildirim raporunu getir
 router.get('/raporlar/bildirim', asyncHandler(async (_req: Request, res: Response) => {
-  const eposta = _req.headers['x-user-email'] as string | undefined;
+  const eposta = getUserEmail(_req);
+  if (!eposta) {
+    return successResponse(res, {
+      rapor: [],
+      ozet: { toplamArac: 0, yakinda: 0, uyarida: 0, gecikmiş: 0 },
+    });
+  }
+
   const rapor = generateBildirimRaporu(eposta);
 
   const yakinda  = rapor.filter(r => r.kalanGun > 0 && r.kalanGun <= 30).length;
@@ -248,7 +266,11 @@ router.post('/sigorta/teklifler', asyncHandler(async (req: Request, res: Respons
  * Geçerli tip değerleri: tavsiye (varsayılan), ozet, uyari
  */
 router.get('/ai/tavsiye/:id', asyncHandler(async (req: Request, res: Response) => {
-  const eposta = req.headers['x-user-email'] as string | undefined;
+  const eposta = getUserEmail(req);
+  if (!eposta) {
+    return errorResponse(res, 'AI tavsiyesi icin giris gerekli', 401);
+  }
+
   const arac = getAracById(req.params.id, eposta);
 
   if (!arac) {

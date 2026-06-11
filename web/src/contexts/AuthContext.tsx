@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 
 interface AuthState {
   isLoggedIn: boolean;
@@ -19,42 +19,48 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 const PREFIX = '@caremind';
 
+const getInitialAuthState = (): AuthState => {
+  const status = localStorage.getItem(`${PREFIX}:isLoggedIn`);
+  const isim = localStorage.getItem(`${PREFIX}:kullaniciAdi`);
+  const eposta = localStorage.getItem(`${PREFIX}:kayitliEposta`);
+
+  return {
+    isLoggedIn: status === 'true',
+    kullaniciAdi: isim || 'Misafir',
+    email: eposta || '',
+  };
+};
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [kullaniciAdi, setKullaniciAdi] = useState('Misafir');
-  const [email, setEmail] = useState('');
+  const [authState, setAuthState] = useState<AuthState>(getInitialAuthState);
+  const { isLoggedIn, kullaniciAdi, email } = authState;
   const [hata, setHata] = useState<string | null>(null);
 
   useEffect(() => {
-    const status = localStorage.getItem(`${PREFIX}:isLoggedIn`);
-    const isim = localStorage.getItem(`${PREFIX}:kullaniciAdi`);
-    const eposta = localStorage.getItem(`${PREFIX}:kayitliEposta`);
-    if (eposta) setEmail(eposta);
-    if (isim) setKullaniciAdi(isim);
-    setIsLoggedIn(status === 'true');
+    setAuthState(getInitialAuthState());
   }, []);
 
   const girisYap = useCallback(async (girilenEmail: string) => {
     setHata(null);
     const temiz = girilenEmail.trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(temiz)) {
-      setHata('Geçerli bir e-posta adresi girin.');
+      setHata('Gecerli bir e-posta adresi girin.');
       return;
     }
+
     const kayitli = localStorage.getItem(`${PREFIX}:kayitliEposta`);
     if (!kayitli) {
-      setHata('Kayıtlı profil bulunamadı. Önce kayıt olun.');
+      setHata('Kayitli profil bulunamadi. Once kayit olun.');
       return;
     }
     if (temiz !== kayitli.toLowerCase()) {
-      setHata('Bu e-posta ile kayıtlı profil bulunamadı.');
+      setHata('Bu e-posta ile kayitli profil bulunamadi.');
       return;
     }
-    const isim = localStorage.getItem(`${PREFIX}:kullaniciAdi`) || 'Premium Üye';
-    setKullaniciAdi(isim);
-    setEmail(temiz);
+
+    const isim = localStorage.getItem(`${PREFIX}:kullaniciAdi`) || 'Premium Uye';
     localStorage.setItem(`${PREFIX}:isLoggedIn`, 'true');
-    setIsLoggedIn(true);
+    setAuthState({ isLoggedIn: true, kullaniciAdi: isim, email: temiz });
   }, []);
 
   const kayitOl = useCallback(async (isim: string, girilenEmail: string) => {
@@ -62,27 +68,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const temizEmail = girilenEmail.trim().toLowerCase();
     const temizIsim = isim.trim();
     if (!temizIsim || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(temizEmail)) {
-      setHata('Ad soyad ve geçerli e-posta adresi gerekli.');
+      setHata('Ad soyad ve gecerli e-posta adresi gerekli.');
       return;
     }
+
     localStorage.setItem(`${PREFIX}:kayitliEposta`, temizEmail);
     localStorage.setItem(`${PREFIX}:kullaniciAdi`, temizIsim);
     localStorage.setItem(`${PREFIX}:isLoggedIn`, 'true');
-    setKullaniciAdi(temizIsim);
-    setEmail(temizEmail);
-    setIsLoggedIn(true);
+    setAuthState({ isLoggedIn: true, kullaniciAdi: temizIsim, email: temizEmail });
   }, []);
 
   const cikisYap = useCallback(() => {
     localStorage.removeItem(`${PREFIX}:isLoggedIn`);
-    setIsLoggedIn(false);
+    setAuthState((onceki) => ({ ...onceki, isLoggedIn: false }));
   }, []);
 
   const isimGuncelle = useCallback(async (yeniIsim: string) => {
     const temiz = yeniIsim.trim();
     if (temiz) {
       localStorage.setItem(`${PREFIX}:kullaniciAdi`, temiz);
-      setKullaniciAdi(temiz);
+      setAuthState((onceki) => ({ ...onceki, kullaniciAdi: temiz }));
     }
   }, []);
 

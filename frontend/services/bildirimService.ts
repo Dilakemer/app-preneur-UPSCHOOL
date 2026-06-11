@@ -1,7 +1,7 @@
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Device from 'expo-device';
-import * as Notifications from 'expo-notifications';
+import type { PermissionStatus } from 'expo-notifications';
 import { BILDIRIM_GUNLERI } from '../constants/bildirimAraliklari';
 import type { BildirimIzinDurumu } from '../types/Api';
 import type { Arac, TarihKategorisi } from '../types/Arac';
@@ -18,12 +18,20 @@ import { saatStringiniParcala, tarihStringiniDateYap } from '../utils/tarihHesap
 let handlerHazir = false;
 const BILDIRIM_AKTIF_ANAHTARI = '@caremind:notificationsEnabled';
 
+const getNotifications = () => import('expo-notifications');
+
 const bildirimTercihiAktifMi = async () => {
   const tercih = await AsyncStorage.getItem(BILDIRIM_AKTIF_ANAHTARI);
   return tercih === null || tercih === '1' || tercih === 'true';
 };
 
 export const bildirimleriYapilandir = async () => {
+  if (Platform.OS === 'web') {
+    return;
+  }
+
+  const Notifications = await getNotifications();
+
   if (!handlerHazir) {
     Notifications.setNotificationHandler({
       handleNotification: async () => ({
@@ -47,7 +55,7 @@ export const bildirimleriYapilandir = async () => {
   }
 };
 
-const statusDegeriniCevir = (durum?: Notifications.PermissionStatus): BildirimIzinDurumu => {
+const statusDegeriniCevir = (durum?: PermissionStatus): BildirimIzinDurumu => {
   if (durum === 'granted') {
     return 'granted';
   }
@@ -66,6 +74,7 @@ export const izinIste = async (): Promise<BildirimIzinDurumu> => {
 
   await bildirimleriYapilandir();
 
+  const Notifications = await getNotifications();
   const mevcut = await Notifications.getPermissionsAsync();
 
   if (mevcut.granted) {
@@ -84,6 +93,7 @@ export const izinDurumunuKontrolEt = async (): Promise<BildirimIzinDurumu> => {
     return 'undetermined';
   }
 
+  const Notifications = await getNotifications();
   const sonuc = await Notifications.getPermissionsAsync();
   const durum = statusDegeriniCevir(sonuc.status);
   await setCachedBildirimIzni(durum);
@@ -110,6 +120,7 @@ const kategoriTarihiniAl = (arac: Arac, kategori: TarihKategorisi) =>
   arac[`${kategori}Tarihi` as keyof Arac] as string | null;
 
 const tarihIcinBildirimler = async (arac: Arac, kategori: TarihKategorisi) => {
+  const Notifications = await getNotifications();
   const tarih = kategoriTarihiniAl(arac, kategori);
 
   if (!tarih) {
@@ -177,6 +188,7 @@ export const aracBildirimleriniIptalEt = async (aracId: string) => {
     return;
   }
 
+  const Notifications = await getNotifications();
   const mevcut = await Notifications.getAllScheduledNotificationsAsync();
   const aracIdleri = new Set(
     mevcut
@@ -204,6 +216,7 @@ export const senkronizeTumBildirimler = async (araclar: Arac[]) => {
   const izin = await izinDurumunuKontrolEt();
 
   if (izin !== 'granted' || !(await bildirimTercihiAktifMi())) {
+    const Notifications = await getNotifications();
     await Notifications.cancelAllScheduledNotificationsAsync();
     await clearTumBildirimKayitlari();
 
@@ -214,6 +227,7 @@ export const senkronizeTumBildirimler = async (araclar: Arac[]) => {
   }
 
   await bildirimleriYapilandir();
+  const Notifications = await getNotifications();
   await Notifications.cancelAllScheduledNotificationsAsync();
   await clearTumBildirimKayitlari();
 

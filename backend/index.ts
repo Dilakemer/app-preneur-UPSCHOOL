@@ -10,7 +10,7 @@ dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3001;
-const corsOrigins = (process.env.CORS_ORIGIN ?? 'http://localhost:8081,http://localhost:19006,http://localhost:3000')
+const corsOrigins = (process.env.CORS_ORIGIN ?? 'http://localhost:5173,http://localhost:8081,http://localhost:19006,http://localhost:3000')
   .split(',')
   .map((origin) => origin.trim())
   .filter(Boolean);

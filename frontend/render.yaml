@@ -2,7 +2,7 @@ services:
   - type: web
     name: caremind-web
     env: static
-    rootDir: .
+    rootDir: frontend
     buildCommand: npm ci && npm run build:web
     staticPublishPath: dist
     autoDeploy: true

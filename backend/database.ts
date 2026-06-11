@@ -158,12 +158,12 @@ export const getAracByPlaka = (plaka: string, eposta?: string): Arac | undefined
 export const kalanGunHesapla = (tarih: string | null): number | null => {
   if (!tarih) return null;
 
-  const hedef = new Date(tarih);
   const bugun = new Date();
-  bugun.setHours(0, 0, 0, 0);
-  hedef.setHours(0, 0, 0, 0);
+  const [yil, ay, gun] = tarih.split('-').map(Number);
+  const bugunUtc = Date.UTC(bugun.getFullYear(), bugun.getMonth(), bugun.getDate());
+  const hedefUtc = Date.UTC(yil, ay - 1, gun);
 
-  const fark = hedef.getTime() - bugun.getTime();
+  const fark = hedefUtc - bugunUtc;
   return Math.round(fark / (24 * 60 * 60 * 1000));
 };
 

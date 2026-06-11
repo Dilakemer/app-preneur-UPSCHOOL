@@ -115,12 +115,11 @@ Tarihler:${tarihBlok}${soruBlok}`;
 
 function gunFarki(tarih: string): number {
   const bugun = new Date();
-  bugun.setHours(0, 0, 0, 0);
+  const [yil, ay, gun] = tarih.split('-').map(Number);
+  const bugunUtc = Date.UTC(bugun.getFullYear(), bugun.getMonth(), bugun.getDate());
+  const hedefUtc = Date.UTC(yil, ay - 1, gun);
 
-  const hedef = new Date(tarih);
-  hedef.setHours(0, 0, 0, 0);
-
-  return Math.ceil((hedef.getTime() - bugun.getTime()) / (1000 * 60 * 60 * 24));
+  return Math.round((hedefUtc - bugunUtc) / (1000 * 60 * 60 * 24));
 }
 
 function yerelTavsiyeOlustur(arac: Arac, tip: AIPromptTipi, soru?: string): string {

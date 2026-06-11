@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Feather } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   ActivityIndicator,
   Alert,
@@ -48,8 +47,6 @@ export const AracForm = ({ mode, aracId }: AracFormProps) => {
   const [gun1, setGun1] = useState(true);
   const [bildirimSaati, setBildirimSaati] = useState<Date | null>(new Date());
   const [kaydediliyor, setKaydediliyor] = useState(false);
-  const [girisKontroluTamamlandi, setGirisKontroluTamamlandi] = useState(mode === 'edit');
-  const [girisGerekli, setGirisGerekli] = useState(false);
 
   useEffect(() => {
     if (!mevcutArac) {
@@ -85,25 +82,6 @@ export const AracForm = ({ mode, aracId }: AracFormProps) => {
     date.setHours(Number(saat), Number(dakika), 0, 0);
     setBildirimSaati(date);
   }, [mevcutArac, mode, varsayilanBildirimSaati]);
-
-  useEffect(() => {
-    const kontrolEt = async () => {
-      if (mode === 'edit') {
-        setGirisKontroluTamamlandi(true);
-        return;
-      }
-
-      const eposta = await AsyncStorage.getItem('@caremind:kayitliEposta');
-      const girisYapmisMi = Boolean(eposta?.trim());
-      setGirisGerekli(!girisYapmisMi);
-      setGirisKontroluTamamlandi(true);
-    };
-
-    kontrolEt().catch(() => {
-      setGirisGerekli(true);
-      setGirisKontroluTamamlandi(true);
-    });
-  }, [mode]);
 
   const plakaHatasi = !plaka.trim() ? 'Plaka alani bos birakilamaz' : null;
   const yilDegeri = Number(yil);
@@ -150,12 +128,6 @@ export const AracForm = ({ mode, aracId }: AracFormProps) => {
   };
 
   const handleKaydet = async () => {
-    if (girisGerekli) {
-      Alert.alert('Giriş gerekli', 'Araç eklemek için önce profilinizden giriş yapın.');
-      router.push('/(tabs)/profil');
-      return;
-    }
-
     if (!formGecerli) {
       return;
     }
@@ -208,28 +180,6 @@ export const AracForm = ({ mode, aracId }: AracFormProps) => {
         <Text style={styles.bosBaslik}>Bu arac kaydi bulunamadi.</Text>
         <Pressable onPress={() => router.replace('/(tabs)')} style={styles.koyuButon}>
           <Text style={styles.koyuButonMetni}>Ana ekrana don</Text>
-        </Pressable>
-      </View>
-    );
-  }
-
-  if (!girisKontroluTamamlandi) {
-    return (
-      <View style={styles.bosEkran}>
-        <Stack.Screen options={{ title: 'Yükleniyor' }} />
-        <ActivityIndicator color={renkler.vurgu} />
-      </View>
-    );
-  }
-
-  if (mode === 'create' && girisGerekli) {
-    return (
-      <View style={styles.bosEkran}>
-        <Stack.Screen options={{ title: 'Giriş gerekli' }} />
-        <Text style={styles.bosBaslik}>Araç eklemek için giriş yapın.</Text>
-        <Text style={styles.bosAciklama}>Misafir modunda yalnızca görüntüleme yapabilirsiniz.</Text>
-        <Pressable onPress={() => router.push('/(tabs)/profil')} style={styles.koyuButon}>
-          <Text style={styles.koyuButonMetni}>Profile Git</Text>
         </Pressable>
       </View>
     );
@@ -398,12 +348,6 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     padding: 22,
     gap: 10,
-  bosAciklama: {
-    color: renkler.metinIkincil,
-    fontSize: 14,
-    lineHeight: 20,
-    textAlign: 'center',
-  },
   },
   heroEtiket: {
     color: '#C7D7EA',

@@ -663,6 +663,12 @@ input, select, textarea {
   transform: none;
 }
 
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .btn-secondary {
   background: var(--color-card);
   color: var(--color-text);
@@ -1928,5 +1934,107 @@ input, select, textarea {
   .phone-frame.device-compact {
     height: 590px;
     width: min(100%, 312px);
+  }
+}
+
+/* Onboarding Tour */
+.tour-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(7, 10, 17, 0.78);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 220;
+  padding: 20px;
+  animation: fadeIn var(--transition-fast);
+}
+
+.tour-panel {
+  background: var(--color-bg);
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-elevated);
+  width: min(100%, 520px);
+  padding: 28px;
+  animation: slideUp var(--transition-base);
+}
+
+.tour-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.tour-eyebrow {
+  color: var(--color-accent);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.tour-step-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: var(--radius-lg);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 900;
+  margin-bottom: 18px;
+}
+
+.tour-panel h2 {
+  font-size: 26px;
+  font-weight: 900;
+  line-height: 1.2;
+  margin-bottom: 10px;
+}
+
+.tour-panel p {
+  color: var(--color-text-secondary);
+  font-size: 15px;
+  line-height: 1.7;
+  margin-bottom: 24px;
+}
+
+.tour-progress {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.tour-progress span {
+  height: 5px;
+  border-radius: 999px;
+  background: var(--color-card-dark);
+}
+
+.tour-progress span.active {
+  background: var(--color-accent);
+}
+
+.tour-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+@media (max-width: 520px) {
+  .tour-panel {
+    padding: 22px;
+  }
+
+  .tour-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
   }
 }

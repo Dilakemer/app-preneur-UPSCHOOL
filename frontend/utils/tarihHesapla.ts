@@ -13,6 +13,16 @@ export const tarihStringiniDateYap = (tarih: string) => {
   return new Date(yil, ay - 1, gun);
 };
 
+const tarihStringiniUtcGunZamaninaCevir = (tarih: string) => {
+  const [yil, ay, gun] = tarih.split('-').map(Number);
+  return Date.UTC(yil, ay - 1, gun);
+};
+
+const bugununUtcGunZamani = () => {
+  const bugun = bugununBaslangici();
+  return Date.UTC(bugun.getFullYear(), bugun.getMonth(), bugun.getDate());
+};
+
 export const dateiTarihStringineCevir = (date: Date) => {
   const yil = date.getFullYear();
   const ay = String(date.getMonth() + 1).padStart(2, '0');
@@ -29,8 +39,7 @@ export const saatStringiniParcala = (saat: string) => {
 };
 
 export const kalanGunHesapla = (tarih: string) => {
-  const hedef = tarihStringiniDateYap(tarih);
-  const fark = hedef.getTime() - bugununBaslangici().getTime();
+  const fark = tarihStringiniUtcGunZamaninaCevir(tarih) - bugununUtcGunZamani();
   return Math.round(fark / GUN_MS);
 };
 

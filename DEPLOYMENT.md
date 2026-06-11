@@ -16,9 +16,31 @@
 3. Start command: `node dist/index.js`
 4. Health check path: `/api/saglik-kontrol`
 
+## Web Frontend
+
+The current web dashboard lives in the `web/` directory. On Render, deploy it as a **Static Site**, not as the Expo mobile frontend.
+
+Recommended Render settings:
+
+1. Root Directory: `web`
+2. Build Command: `npm ci && npm run build`
+3. Publish Directory: `dist`
+4. Environment Variables:
+   - `VITE_API_URL=https://caremind-api.onrender.com/api`
+5. Redirect/Rewrites:
+   - Source: `/*`
+   - Destination: `/index.html`
+
+If Render logs show `npm run build:web` or `expo export --platform web`, Render is building the old Expo/mobile web target from `frontend/`. Change the service root directory to `web`, then run **Manual Deploy > Clear build cache & deploy**.
+
+Alternative setup if Root Directory is left empty:
+
+1. Build Command: `cd web && npm ci && npm run build`
+2. Publish Directory: `web/dist`
+
 ## Mobile
 
-1. Replace `https://YOUR_BACKEND_DOMAIN/api` in `frontend/eas.json`.
+1. Confirm `EXPO_PUBLIC_API_URL` in `frontend/eas.json` points to your production backend.
 2. Install EAS CLI if needed: `npm install -g eas-cli`
 3. Login: `eas login`
 4. Configure project once from `frontend`: `eas build:configure`

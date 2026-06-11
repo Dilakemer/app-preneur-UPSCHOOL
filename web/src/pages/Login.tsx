@@ -1,14 +1,22 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 export default function Login() {
-  const { girisYap, kayitOl, hata, setHata } = useAuth();
+  const { girisYap, kayitOl, hata, setHata, isLoggedIn } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [mod, setMod] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
   const [isim, setIsim] = useState('');
   const [loading, setLoading] = useState(false);
+  const hedef = (location.state as { from?: string } | null)?.from || '/';
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      navigate(hedef, { replace: true });
+    }
+  }, [hedef, isLoggedIn, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,7 +31,7 @@ export default function Login() {
       setTimeout(() => {
         const status = localStorage.getItem('@caremind:isLoggedIn');
         if (status === 'true') {
-          navigate('/');
+          navigate(hedef, { replace: true });
         }
         setLoading(false);
       }, 100);
