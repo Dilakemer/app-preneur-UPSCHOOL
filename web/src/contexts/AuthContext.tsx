@@ -7,8 +7,8 @@ interface AuthState {
 }
 
 interface AuthContextValue extends AuthState {
-  girisYap: (email: string) => Promise<void>;
-  kayitOl: (isim: string, email: string) => Promise<void>;
+  girisYap: (email: string, sifre: string) => Promise<void>;
+  kayitOl: (isim: string, email: string, sifre: string) => Promise<void>;
   cikisYap: () => void;
   isimGuncelle: (yeniIsim: string) => Promise<void>;
   hata: string | null;
@@ -18,6 +18,15 @@ interface AuthContextValue extends AuthState {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 const PREFIX = '@caremind';
+
+/** Basit deterministik hash — gerçek şifreleme için backend kullanılmalı */
+async function sifreHashle(sifre: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(sifre + ':caremind-salt-2026');
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+}
 
 const getInitialAuthState = (): AuthState => {
   const status = localStorage.getItem(`${PREFIX}:isLoggedIn`);
@@ -40,40 +49,64 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAuthState(getInitialAuthState());
   }, []);
 
-  const girisYap = useCallback(async (girilenEmail: string) => {
+  const girisYap = useCallback(async (girilenEmail: string, sifre: string) => {
     setHata(null);
     const temiz = girilenEmail.trim().toLowerCase();
+
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(temiz)) {
-      setHata('Gecerli bir e-posta adresi girin.');
+      setHata('Geçerli bir e-posta adresi girin.');
+      return;
+    }
+
+    if (!sifre || sifre.length < 6) {
+      setHata('Şifre en az 6 karakter olmalıdır.');
       return;
     }
 
     const kayitli = localStorage.getItem(`${PREFIX}:kayitliEposta`);
     if (!kayitli) {
-      setHata('Kayitli profil bulunamadi. Once kayit olun.');
+      setHata('Kayıtlı profil bulunamadı. Önce kayıt olun.');
       return;
     }
     if (temiz !== kayitli.toLowerCase()) {
-      setHata('Bu e-posta ile kayitli profil bulunamadi.');
+      setHata('Bu e-posta ile kayıtlı profil bulunamadı.');
       return;
     }
 
-    const isim = localStorage.getItem(`${PREFIX}:kullaniciAdi`) || 'Premium Uye';
+    const kayitliHash = localStorage.getItem(`${PREFIX}:sifreHash`);
+    const girilenHash = await sifreHashle(sifre);
+    if (!kayitliHash || girilenHash !== kayitliHash) {
+      setHata('Şifre hatalı. Lütfen tekrar deneyin.');
+      return;
+    }
+
+    const isim = localStorage.getItem(`${PREFIX}:kullaniciAdi`) || 'Premium Üye';
     localStorage.setItem(`${PREFIX}:isLoggedIn`, 'true');
     setAuthState({ isLoggedIn: true, kullaniciAdi: isim, email: temiz });
   }, []);
 
-  const kayitOl = useCallback(async (isim: string, girilenEmail: string) => {
+  const kayitOl = useCallback(async (isim: string, girilenEmail: string, sifre: string) => {
     setHata(null);
     const temizEmail = girilenEmail.trim().toLowerCase();
     const temizIsim = isim.trim();
-    if (!temizIsim || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(temizEmail)) {
-      setHata('Ad soyad ve gecerli e-posta adresi gerekli.');
+
+    if (!temizIsim) {
+      setHata('Ad soyad gereklidir.');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(temizEmail)) {
+      setHata('Geçerli bir e-posta adresi girin.');
+      return;
+    }
+    if (!sifre || sifre.length < 6) {
+      setHata('Şifre en az 6 karakter olmalıdır.');
       return;
     }
 
+    const hash = await sifreHashle(sifre);
     localStorage.setItem(`${PREFIX}:kayitliEposta`, temizEmail);
     localStorage.setItem(`${PREFIX}:kullaniciAdi`, temizIsim);
+    localStorage.setItem(`${PREFIX}:sifreHash`, hash);
     localStorage.setItem(`${PREFIX}:isLoggedIn`, 'true');
     setAuthState({ isLoggedIn: true, kullaniciAdi: temizIsim, email: temizEmail });
   }, []);

@@ -1,29 +1,15 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
+import { useAraclar } from '../contexts/AraclarContext';
+import { useAuth } from '../contexts/AuthContext';
+import { enYakinTarihBul, kalanGunMetni, tarihFormatla } from '../utils/tarihHesapla';
+import { KATEGORI_BASLIKLARI } from '../types/Arac';
+import { aiTavsiyeAl as aiServis } from '../services/aiService';
+import type { Arac } from '../types/Arac';
+import type { AIPromptTipi } from '../services/aiService';
+import { useNavigate } from 'react-router-dom';
 
-type ScenarioKey = 'new' | 'owner' | 'insurance';
 type DeviceKey = 'iphone' | 'android' | 'compact';
-type ScreenKey = 'home' | 'add' | 'insurance' | 'ai';
-
-const SCENARIOS: Record<ScenarioKey, { label: string; title: string; copy: string; initialScreen: ScreenKey }> = {
-  new: {
-    label: 'Yeni kullanici',
-    title: 'Ilk araci ekleme akisi',
-    copy: 'Kullanici daha hesapta arac yokken CareMind ile neleri takip edecegini ve AI danismana nasil ulasacagini gorur.',
-    initialScreen: 'home',
-  },
-  owner: {
-    label: 'Arac sahibi',
-    title: 'Tarih takip paneli',
-    copy: 'Kayitli arac uzerinden muayene, sigorta, kasko ve bakim tarihleri tek ekranda taranabilir.',
-    initialScreen: 'home',
-  },
-  insurance: {
-    label: 'Sigorta zamani',
-    title: 'Teklif karsilastirma',
-    copy: 'Sigorta yenileme doneminde tahmini/canli teklif akisi ve yonlendirme deneyimi one cikar.',
-    initialScreen: 'insurance',
-  },
-};
+type ScreenKey = 'home' | 'detay' | 'sigorta' | 'ai';
 
 const DEVICES: Record<DeviceKey, { label: string; className: string }> = {
   iphone: { label: 'iPhone', className: 'device-iphone' },
@@ -32,259 +18,372 @@ const DEVICES: Record<DeviceKey, { label: string; className: string }> = {
 };
 
 const SCREEN_LABELS: Record<ScreenKey, string> = {
-  home: 'Ana ekran',
-  add: 'Arac ekle',
-  insurance: 'Sigorta',
-  ai: 'AI danisman',
+  home: 'Ana Ekran',
+  detay: 'Araç Detay',
+  sigorta: 'Sigorta',
+  ai: 'AI Danışman',
 };
 
-const insuranceOffers = [
-  { name: 'Quick Sigorta', price: '11.850 TL', tag: 'Ekonomik' },
-  { name: 'Aksigorta', price: '12.900 TL', tag: 'Dengeli' },
-  { name: 'Anadolu Sigorta', price: '14.250 TL', tag: 'Kapsamli' },
-];
+const TAB_ICONS: Record<ScreenKey, string> = {
+  home: '🏠',
+  detay: '🚗',
+  sigorta: '🛡️',
+  ai: '🤖',
+};
 
 function PhoneHeader() {
+  const now = new Date();
+  const saat = now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
   return (
     <div className="phone-status">
-      <span>09:41</span>
+      <span>{saat}</span>
       <span className="phone-status-icons">LTE 86%</span>
     </div>
   );
 }
 
-function HomeScreen({ scenario, onScreenChange }: { scenario: ScenarioKey; onScreenChange: (screen: ScreenKey) => void }) {
-  const hasVehicle = scenario !== 'new';
+function HomeScreen({
+  araclar,
+  secilenArac,
+  onAracSec,
+  onScreenChange,
+}: {
+  araclar: Arac[];
+  secilenArac: Arac | null;
+  onAracSec: (a: Arac) => void;
+  onScreenChange: (s: ScreenKey) => void;
+}) {
+  if (araclar.length === 0) {
+    return (
+      <div className="phone-screen-content">
+        <div className="phone-title-row">
+          <div>
+            <span className="phone-kicker">CareMind</span>
+            <h3>Başlayalım</h3>
+          </div>
+          <button className="phone-icon-btn" onClick={() => onScreenChange('ai')}>🤖</button>
+        </div>
+        <div className="phone-empty">
+          <div className="phone-empty-icon">🚗</div>
+          <strong>Araç eklemediniz</strong>
+          <span>Ana sayfadan araç ekleyerek mobil deneyimi deneyin.</span>
+        </div>
+      </div>
+    );
+  }
+
+  const acilSayisi = araclar.filter(a => {
+    const en = enYakinTarihBul(a);
+    return en && en.kalanGun <= 7;
+  }).length;
+
+  const yaklasanSayisi = araclar.filter(a => {
+    const en = enYakinTarihBul(a);
+    return en && en.kalanGun > 7 && en.kalanGun <= 30;
+  }).length;
 
   return (
     <div className="phone-screen-content">
       <div className="phone-title-row">
         <div>
           <span className="phone-kicker">CareMind</span>
-          <h3>{hasVehicle ? 'Araclarim' : 'Baslayalim'}</h3>
+          <h3>Araçlarım</h3>
         </div>
-        <button className="phone-icon-btn" onClick={() => onScreenChange('ai')} aria-label="AI danismani ac">
-          AI
-        </button>
+        <button className="phone-icon-btn" onClick={() => onScreenChange('ai')}>🤖</button>
       </div>
 
-      {hasVehicle ? (
-        <>
-          <div className="phone-summary-card">
-            <div>
-              <span className="phone-muted">Aktif takip</span>
-              <strong>1 arac</strong>
-            </div>
-            <div>
-              <span className="phone-muted">Yaklasan</span>
-              <strong>12 gun</strong>
-            </div>
-          </div>
+      <div className="phone-summary-card">
+        <div>
+          <span className="phone-muted">Toplam Araç</span>
+          <strong>{araclar.length}</strong>
+        </div>
+        <div>
+          <span className="phone-muted">Acil</span>
+          <strong style={{ color: acilSayisi > 0 ? '#f87171' : 'inherit' }}>{acilSayisi}</strong>
+        </div>
+        <div>
+          <span className="phone-muted">Yaklaşan</span>
+          <strong style={{ color: yaklasanSayisi > 0 ? '#fbbf24' : 'inherit' }}>{yaklasanSayisi}</strong>
+        </div>
+      </div>
 
-          <button className="phone-vehicle-card" onClick={() => onScreenChange('insurance')}>
-            <div className="phone-plate">34 CM 2026</div>
-            <div className="phone-vehicle-name">Toyota Corolla</div>
-            <div className="phone-date-line">
-              <span>Sigorta</span>
-              <strong>12 gun kaldi</strong>
-            </div>
-          </button>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {araclar.map(arac => {
+          const en = enYakinTarihBul(arac);
+          const isSelected = secilenArac?.id === arac.id;
+          const durum = en ? (en.kalanGun <= 7 ? 'kırmızı' : en.kalanGun <= 30 ? 'sarı' : 'yeşil') : 'nötr';
+          const borderColor = durum === 'kırmızı' ? '#f87171' : durum === 'sarı' ? '#fbbf24' : durum === 'yeşil' ? '#4ade80' : '#6366f1';
 
-          <div className="phone-date-grid">
-            <div>
-              <span>Muayene</span>
-              <strong>18.07.2026</strong>
-            </div>
-            <div>
-              <span>Bakim</span>
-              <strong>4.000 km</strong>
-            </div>
-          </div>
-        </>
-      ) : (
-        <>
-          <div className="phone-empty">
-            <div className="phone-empty-icon">+</div>
-            <strong>Ilk aracinizi ekleyin</strong>
-            <span>Muayene, sigorta, kasko ve bakim tarihleri ayni panoda toplansin.</span>
-          </div>
-          <button className="phone-primary" onClick={() => onScreenChange('add')}>
-            Arac ekle
-          </button>
-          <button className="phone-secondary" onClick={() => onScreenChange('ai')}>
-            AI danismana sor
-          </button>
-        </>
-      )}
+          return (
+            <button
+              key={arac.id}
+              className="phone-vehicle-card"
+              style={{ borderLeft: `3px solid ${borderColor}`, background: isSelected ? 'rgba(99,102,241,0.1)' : undefined }}
+              onClick={() => { onAracSec(arac); onScreenChange('detay'); }}
+            >
+              <div className="phone-plate">{arac.plaka}</div>
+              <div className="phone-vehicle-name">{arac.marka} {arac.model} ({arac.yil})</div>
+              {en && (
+                <div className="phone-date-line">
+                  <span>{KATEGORI_BASLIKLARI[en.kategori]}</span>
+                  <strong style={{ color: borderColor }}>{kalanGunMetni(en.kalanGun)}</strong>
+                </div>
+              )}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
 
-function AddVehicleScreen({ onScreenChange }: { onScreenChange: (screen: ScreenKey) => void }) {
+function DetayScreen({
+  arac,
+  onScreenChange,
+}: {
+  arac: Arac | null;
+  onScreenChange: (s: ScreenKey) => void;
+}) {
+  if (!arac) {
+    return (
+      <div className="phone-screen-content">
+        <div className="phone-title-row">
+          <div><h3>Araç Seçin</h3></div>
+        </div>
+        <div className="phone-empty">
+          <div className="phone-empty-icon">🚗</div>
+          <span>Ana ekrandan bir araç seçin.</span>
+        </div>
+      </div>
+    );
+  }
+
+  const tarihler = [
+    { label: 'Muayene', tarih: arac.muayeneTarihi },
+    { label: 'Sigorta', tarih: arac.sigortaTarihi },
+    { label: 'Kasko', tarih: arac.kaskoTarihi },
+    { label: 'Bakım', tarih: arac.bakimTarihi },
+  ].filter(t => t.tarih);
+
   return (
     <div className="phone-screen-content">
       <div className="phone-title-row">
         <div>
-          <span className="phone-kicker">Yeni kayit</span>
-          <h3>Arac ekle</h3>
+          <span className="phone-kicker">{arac.plaka}</span>
+          <h3>{arac.marka} {arac.model}</h3>
         </div>
       </div>
 
-      <div className="phone-form">
-        <label>
-          Plaka
-          <span>34 CM 2026</span>
-        </label>
-        <label>
-          Marka
-          <span>Toyota</span>
-        </label>
-        <label>
-          Model
-          <span>Corolla</span>
-        </label>
-        <label>
-          Sigorta tarihi
-          <span>23.06.2026</span>
-        </label>
+      <div className="phone-date-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
+        {tarihler.map(t => (
+          <div key={t.label} style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 10, padding: '10px 12px' }}>
+            <span style={{ fontSize: 11, color: 'var(--phone-muted, #8e9bb7)' }}>{t.label}</span>
+            <br />
+            <strong style={{ fontSize: 13 }}>{tarihFormatla(t.tarih!)}</strong>
+          </div>
+        ))}
+        {tarihler.length === 0 && (
+          <div style={{ gridColumn: '1/-1', textAlign: 'center', color: '#8e9bb7', fontSize: 13, padding: 16 }}>
+            Tarih bilgisi eklenmemiş
+          </div>
+        )}
       </div>
 
-      <div className="phone-note">
-        Kaydedince bildirim planlama ve AI yorumlari arac verisine gore kisilesir.
-      </div>
-      <button className="phone-primary" onClick={() => onScreenChange('home')}>
-        Demo kaydi olustur
+      <button className="phone-primary" onClick={() => onScreenChange('sigorta')}>
+        🛡️ Sigorta Teklifleri
+      </button>
+      <button className="phone-secondary" onClick={() => onScreenChange('ai')}>
+        🤖 AI Danışmana Sor
       </button>
     </div>
   );
 }
 
-function InsuranceScreen({ onScreenChange }: { onScreenChange: (screen: ScreenKey) => void }) {
+function SigortaScreen({ arac }: { arac: Arac | null }) {
+  const teklifler = arac
+    ? [
+        { name: 'Quick Sigorta', price: `${(10000 + arac.yil % 100 * 120).toLocaleString('tr-TR')} TL`, tag: 'Ekonomik' },
+        { name: 'Aksigorta', price: `${(11500 + arac.yil % 100 * 140).toLocaleString('tr-TR')} TL`, tag: 'Dengeli' },
+        { name: 'Anadolu Sigorta', price: `${(13000 + arac.yil % 100 * 160).toLocaleString('tr-TR')} TL`, tag: 'Kapsamlı' },
+      ]
+    : [];
+
   return (
     <div className="phone-screen-content">
       <div className="phone-title-row">
         <div>
-          <span className="phone-kicker">34 CM 2026</span>
-          <h3>Sigorta teklifleri</h3>
+          <span className="phone-kicker">{arac?.plaka ?? 'Araç Seçilmedi'}</span>
+          <h3>Sigorta Teklifleri</h3>
         </div>
         <span className="phone-live-pill">Tahmini</span>
       </div>
 
-      <div className="phone-offer-summary">
-        <span>En iyi baslangic</span>
-        <strong>11.850 TL</strong>
-        <small>Kesin police bedeli teklif sayfasinda hesaplanir.</small>
-      </div>
-
-      <div className="phone-offer-list">
-        {insuranceOffers.map((offer) => (
-          <button key={offer.name} className="phone-offer" onClick={() => onScreenChange('ai')}>
-            <div>
-              <strong>{offer.name}</strong>
-              <span>{offer.tag}</span>
-            </div>
-            <div className="phone-offer-price">{offer.price}</div>
-          </button>
-        ))}
-      </div>
+      {arac ? (
+        <>
+          <div className="phone-offer-summary">
+            <span>En iyi başlangıç</span>
+            <strong>{teklifler[0].price}</strong>
+            <small>Kesin poliçe bedeli teklif sayfasında hesaplanır.</small>
+          </div>
+          <div className="phone-offer-list">
+            {teklifler.map(offer => (
+              <div key={offer.name} className="phone-offer">
+                <div>
+                  <strong>{offer.name}</strong>
+                  <span>{offer.tag}</span>
+                </div>
+                <div className="phone-offer-price">{offer.price}</div>
+              </div>
+            ))}
+          </div>
+        </>
+      ) : (
+        <div className="phone-empty">
+          <div className="phone-empty-icon">🛡️</div>
+          <span>Ana ekrandan bir araç seçin.</span>
+        </div>
+      )}
     </div>
   );
 }
 
-function AiScreen({ scenario }: { scenario: ScenarioKey }) {
-  const answer =
-    scenario === 'new'
-      ? 'Arac eklemeden once takip edecegin ana basliklar: muayene, trafik sigortasi, kasko ve periyodik bakim. Araci ekleyince tarihleri senin icin onceliklendiririm.'
-      : 'Sigortan 12 gun icinde yenilenmeli. Once teklifleri karsilastir, sonra muayene tarihini kontrol et. Bakim icin kilometre bilgisini de guncel tutmani oneririm.';
+function AiScreen({ arac, email }: { arac: Arac | null; email: string }) {
+  const [mesajlar, setMesajlar] = useState<{ tip: 'user' | 'bot'; metin: string }[]>([
+    { tip: 'bot', metin: arac ? `${arac.marka} ${arac.model} (${arac.yil}) için ne öğrenmek istersiniz?` : 'Merhaba! Bir araç seçin, size yardımcı olayım.' },
+  ]);
+  const [yukleniyor, setYukleniyor] = useState(false);
+
+  const soruSor = useCallback(async (tip: AIPromptTipi, soruMetni: string) => {
+    if (!arac) return;
+    setMesajlar(prev => [...prev, { tip: 'user', metin: soruMetni }]);
+    setYukleniyor(true);
+    try {
+      const yanit = await aiServis(arac, tip, email);
+      setMesajlar(prev => [...prev, { tip: 'bot', metin: yanit }]);
+    } catch {
+      setMesajlar(prev => [...prev, { tip: 'bot', metin: 'Yanıt alınamadı. Lütfen tekrar deneyin.' }]);
+    } finally {
+      setYukleniyor(false);
+    }
+  }, [arac, email]);
 
   return (
-    <div className="phone-screen-content">
+    <div className="phone-screen-content" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div className="phone-title-row">
         <div>
-          <span className="phone-kicker">AI destek</span>
-          <h3>Danisman</h3>
+          <span className="phone-kicker">AI Destek</span>
+          <h3>Danışman</h3>
         </div>
       </div>
 
-      <div className="phone-chat">
-        <div className="phone-message user">Sigorta ve bakim icin nereden baslamaliyim?</div>
-        <div className="phone-message bot">{answer}</div>
+      <div className="phone-chat" style={{ flex: 1, overflowY: 'auto' }}>
+        {mesajlar.map((m, i) => (
+          <div key={i} className={`phone-message ${m.tip}`}>{m.metin}</div>
+        ))}
+        {yukleniyor && (
+          <div className="phone-message bot" style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            <span className="spinner" style={{ width: 14, height: 14 }} /> Düşünüyor...
+          </div>
+        )}
       </div>
 
-      <div className="phone-quick-actions">
-        <button>Risk</button>
-        <button>Ozetle</button>
-        <button>Bakim</button>
-      </div>
+      {arac && (
+        <div className="phone-quick-actions">
+          <button onClick={() => soruSor('tavsiye', 'Tavsiye ver')} disabled={yukleniyor}>💡 Tavsiye</button>
+          <button onClick={() => soruSor('ozet', 'Özetle')} disabled={yukleniyor}>📋 Özet</button>
+          <button onClick={() => soruSor('uyari', 'Uyarılar')} disabled={yukleniyor}>⚠️ Uyarı</button>
+        </div>
+      )}
     </div>
   );
 }
 
 export default function MobilDemo() {
-  const [scenario, setScenario] = useState<ScenarioKey>('new');
+  const { araclar } = useAraclar();
+  const { email } = useAuth();
+  const navigate = useNavigate();
   const [device, setDevice] = useState<DeviceKey>('iphone');
   const [screen, setScreen] = useState<ScreenKey>('home');
+  const [secilenArac, setSecilenArac] = useState<Arac | null>(araclar[0] ?? null);
 
-  const selectedScenario = SCENARIOS[scenario];
-  const selectedDevice = DEVICES[device];
+  const handleAracSec = useCallback((a: Arac) => {
+    setSecilenArac(a);
+  }, []);
 
   const activeScreen = useMemo(() => {
-    if (screen === 'add') return <AddVehicleScreen onScreenChange={setScreen} />;
-    if (screen === 'insurance') return <InsuranceScreen onScreenChange={setScreen} />;
-    if (screen === 'ai') return <AiScreen scenario={scenario} />;
-    return <HomeScreen scenario={scenario} onScreenChange={setScreen} />;
-  }, [scenario, screen]);
-
-  const handleScenarioChange = (key: ScenarioKey) => {
-    setScenario(key);
-    setScreen(SCENARIOS[key].initialScreen);
-  };
+    switch (screen) {
+      case 'detay':
+        return <DetayScreen arac={secilenArac} onScreenChange={setScreen} />;
+      case 'sigorta':
+        return <SigortaScreen arac={secilenArac} />;
+      case 'ai':
+        return <AiScreen arac={secilenArac} email={email} />;
+      default:
+        return (
+          <HomeScreen
+            araclar={araclar}
+            secilenArac={secilenArac}
+            onAracSec={handleAracSec}
+            onScreenChange={setScreen}
+          />
+        );
+    }
+  }, [screen, araclar, secilenArac, email, handleAracSec]);
 
   return (
     <div className="mobile-demo-page animate-slideUp">
       <div className="page-header">
-        <h1>Mobil deneyim simulasyonu</h1>
-        <p>CareMind mobil akislarini web uzerinde telefon boyutunda deneyin.</p>
+        <h1>Mobil Deneyim Simülasyonu</h1>
+        <p>CareMind'ın mobil akışlarını gerçek araç verilerinizle deneyin.</p>
       </div>
 
       <section className="demo-workbench">
         <div className="demo-control-panel">
           <div>
-            <span className="demo-eyebrow">Demo modu</span>
-            <h2>{selectedScenario.title}</h2>
-            <p>{selectedScenario.copy}</p>
+            <span className="demo-eyebrow">Canlı Demo</span>
+            <h2>Gerçek Verileriniz</h2>
+            <p>
+              {araclar.length === 0
+                ? 'Araç eklenmemiş. Gerçek veri görmek için önce araç ekleyin.'
+                : `${araclar.length} araç, ${araclar.filter(a => { const e = enYakinTarihBul(a); return e && e.kalanGun <= 30; }).length} yaklaşan tarih.`}
+            </p>
           </div>
 
-          <div className="demo-control-group">
-            <span>Senaryo</span>
-            <div className="demo-segmented">
-              {(Object.keys(SCENARIOS) as ScenarioKey[]).map((key) => (
-                <button
-                  key={key}
-                  className={scenario === key ? 'active' : ''}
-                  onClick={() => handleScenarioChange(key)}
-                >
-                  {SCENARIOS[key].label}
-                </button>
-              ))}
+          {/* Araç Seçici */}
+          {araclar.length > 0 && (
+            <div className="demo-control-group">
+              <span>Araç Seç</span>
+              <div className="demo-segmented" style={{ flexWrap: 'wrap' }}>
+                {araclar.map(a => (
+                  <button
+                    key={a.id}
+                    className={secilenArac?.id === a.id ? 'active' : ''}
+                    onClick={() => { handleAracSec(a); setScreen('detay'); }}
+                  >
+                    {a.plaka}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
+          {/* Ekran */}
           <div className="demo-control-group">
             <span>Ekran</span>
             <div className="demo-screen-grid">
-              {(Object.keys(SCREEN_LABELS) as ScreenKey[]).map((key) => (
+              {(Object.keys(SCREEN_LABELS) as ScreenKey[]).map(key => (
                 <button key={key} className={screen === key ? 'active' : ''} onClick={() => setScreen(key)}>
-                  {SCREEN_LABELS[key]}
+                  {TAB_ICONS[key]} {SCREEN_LABELS[key].split(' ')[0]}
                 </button>
               ))}
             </div>
           </div>
 
+          {/* Cihaz */}
           <div className="demo-control-group">
-            <span>Cihaz boyutu</span>
+            <span>Cihaz Boyutu</span>
             <div className="demo-segmented">
-              {(Object.keys(DEVICES) as DeviceKey[]).map((key) => (
+              {(Object.keys(DEVICES) as DeviceKey[]).map(key => (
                 <button key={key} className={device === key ? 'active' : ''} onClick={() => setDevice(key)}>
                   {DEVICES[key].label}
                 </button>
@@ -292,25 +391,30 @@ export default function MobilDemo() {
             </div>
           </div>
 
+          {araclar.length === 0 && (
+            <button className="btn btn-primary btn-sm mt-16" onClick={() => navigate('/arac/ekle')}>
+              ＋ Araç Ekle
+            </button>
+          )}
+
           <div className="demo-insight">
-            <strong>Not</strong>
+            <strong>💡 Not</strong>
             <span>
-              Bu alan backend kaydi olusturmaz; satis, destek ve test gorusmelerinde mobil deneyimi guvenli sekilde
-              gostermek icin mock veri kullanir.
+              Bu simülasyon gerçek araç verilerinizi ve Gemini AI'ı kullanır. Yaptığınız işlemler gerçek hesabınıza kaydedilmez.
             </span>
           </div>
         </div>
 
         <div className="phone-stage">
-          <div className={`phone-frame ${selectedDevice.className}`}>
+          <div className={`phone-frame ${DEVICES[device].className}`}>
             <div className="phone-speaker" />
             <PhoneHeader />
             <div className="phone-app-shell">
               {activeScreen}
               <nav className="phone-tabbar">
-                {(Object.keys(SCREEN_LABELS) as ScreenKey[]).map((key) => (
+                {(Object.keys(SCREEN_LABELS) as ScreenKey[]).map(key => (
                   <button key={key} className={screen === key ? 'active' : ''} onClick={() => setScreen(key)}>
-                    <span>{key === 'home' ? 'H' : key === 'add' ? '+' : key === 'insurance' ? 'S' : 'AI'}</span>
+                    <span>{TAB_ICONS[key]}</span>
                     {SCREEN_LABELS[key].split(' ')[0]}
                   </button>
                 ))}

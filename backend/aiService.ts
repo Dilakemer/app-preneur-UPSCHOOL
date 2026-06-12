@@ -1,12 +1,13 @@
+import path from 'path';
 import axios from 'axios';
 import dotenv from 'dotenv';
 import type { Arac } from './types';
 
-dotenv.config();
+dotenv.config({ path: path.join(__dirname, '../.env') });
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_MODEL = process.env.GEMINI_MODEL ?? 'gemini-2.0-flash';
-const GEMINI_FALLBACK_MODELS = (process.env.GEMINI_FALLBACK_MODELS ?? 'gemini-2.5-flash')
+const GEMINI_FALLBACK_MODELS = (process.env.GEMINI_FALLBACK_MODELS ?? 'gemini-1.5-flash,gemini-1.5-pro')
   .split(',')
   .map((model) => model.trim())
   .filter(Boolean);
@@ -223,13 +224,13 @@ export const getAIAdvice = async (
 
         const yanit = response.data?.candidates?.[0]?.content?.parts?.[0]?.text;
         const temizYanit = typeof yanit === 'string' ? yanit.trim() : '';
-        if (temizYanit.length >= 40) {
+        if (temizYanit.length > 0) {
           onbellekteKaydet(cacheAnahtari, temizYanit);
           console.log(`[AI Cache SET] ${cacheAnahtari}`);
           return temizYanit;
         }
 
-        console.warn(`[AI Service Warning] model=${model} kisa veya bos yanit dondu.`);
+        console.warn(`[AI Service Warning] model=${model} bos yanit dondu.`);
       } catch (error: any) {
         const mesaj = error.response?.data?.error?.message ?? error.message;
         console.error(`[AI Service Error] model=${model} ${mesaj}`);

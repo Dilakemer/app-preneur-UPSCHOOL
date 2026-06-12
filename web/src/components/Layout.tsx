@@ -4,11 +4,11 @@ import Sidebar from './Sidebar';
 import OnboardingTour from './OnboardingTour';
 
 const MOBILE_NAV = [
-  { to: '/', label: 'Araclar', icon: 'A' },
-  { to: '/sigorta', label: 'Sigorta', icon: 'S' },
-  { to: '/demo', label: 'Demo', icon: 'M' },
-  { to: '/profil', label: 'Profil', icon: 'P' },
-  { to: '/ayarlar', label: 'Ayarlar', icon: 'D' },
+  { to: '/', label: 'Araçlar', icon: '🚗' },
+  { to: '/bildirimler', label: 'Bildirimler', icon: '🔔' },
+  { to: '/giderler', label: 'Giderler', icon: '💰' },
+  { to: '/sigorta', label: 'Sigorta', icon: '🛡️' },
+  { to: '/ayarlar', label: 'Ayarlar', icon: '⚙️' },
 ];
 
 export default function Layout() {
@@ -18,8 +18,8 @@ export default function Layout() {
     <div className="app-layout">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <button className="mobile-menu-btn" onClick={() => setSidebarOpen(true)} aria-label="Menuyu ac">
-        =
+      <button className="mobile-menu-btn" onClick={() => setSidebarOpen(true)} aria-label="Menüyü aç">
+        ☰
       </button>
 
       <main className="app-content animate-fadeIn">

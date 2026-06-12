@@ -1,12 +1,13 @@
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
 import dotenv from 'dotenv';
 import { seedDatabase } from './database';
 import routes from './routes';
 import { errorHandler } from './middleware';
 import { createApiRouter, securityHeaders, API_VERSION } from './apiLayer';
 
-dotenv.config();
+dotenv.config({ path: path.join(__dirname, '../.env') });
 
 const app = express();
 const port = process.env.PORT || 3001;

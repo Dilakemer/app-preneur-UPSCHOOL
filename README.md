@@ -18,9 +18,10 @@ Hazırlayan: Dila KEMER
 - Kritik tarih takibi: muayene, trafik sigortası, kasko ve bakım.
 - Renkli durum sistemi: güvenli, yaklaşan ve acil tarihlerin hızlı ayrımı.
 - Bildirim tercihleri: 60, 30, 7 ve 1 gün kala hatırlatma seçenekleri.
+- Manuel yazmayı önleyen saat seçici: Bildirim saatleri için klavye ile yazmayı tamamen engelleyen, açılır menü (saat ve dakika ayrı) tabanlı modern saat seçici.
 - Offline-first veri akışı: mobil tarafta AsyncStorage, web tarafta localStorage.
 - Backend senkronizasyonu: giriş yapılan kullanıcıya göre araç verisi API ile eşlenir.
-- AI danışman: araç bilgisine göre bakım, özet ve uyarı tavsiyeleri.
+- Gerçek zamanlı Gemini AI danışmanı: Gelişmiş hata toleransı, güncel modeller (Gemini 2.0 Flash / 1.5 Flash / 1.5 Pro) ve esnek yanıt kontrolü ile gerçek araç verilerini yorumlayan akıllı asistan.
 - Sigorta karşılaştırma: tahmini/affiliate mod ve gerçek sağlayıcı entegrasyonuna hazır yapı.
 - Web demo ekranı: mobil deneyim akışlarını web üzerinde göstermek için mock demo.
 

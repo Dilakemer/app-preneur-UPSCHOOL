@@ -42,6 +42,10 @@ const saveLocalAraclar = (email: string, araclar: Arac[]) => {
   localStorage.setItem(storageKeyFor(email), JSON.stringify(araclar));
 };
 
+/** Basit UUID — backend yoksa yerel ID üretir */
+const yerelId = () =>
+  `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
 export function AraclarProvider({ children }: { children: ReactNode }) {
   const { isLoggedIn, email } = useAuth();
   const [araclar, setAraclar] = useState<Arac[]>([]);
@@ -66,6 +70,7 @@ export function AraclarProvider({ children }: { children: ReactNode }) {
       setAraclar(data);
       saveLocalAraclar(email, data);
     } catch {
+      // Backend erişilemez — localStorage'daki veriyi kullan
       setAraclar(getLocalAraclar(email));
     } finally {
       setYukleniyor(false);
@@ -79,30 +84,66 @@ export function AraclarProvider({ children }: { children: ReactNode }) {
   const araciEkle = useCallback(async (data: AracInput): Promise<Arac> => {
     girisKontrolEt();
 
-    const yeni = await apiPost<Arac>('/araclar', data);
-    setAraclar(prev => {
-      const guncel = [yeni, ...prev.filter(a => a.id !== yeni.id)];
-      saveLocalAraclar(email, guncel);
-      return guncel;
-    });
-    return yeni;
+    try {
+      // Önce backend'e dene
+      const yeni = await apiPost<Arac>('/araclar', data);
+      setAraclar(prev => {
+        const guncel = [yeni, ...prev.filter(a => a.id !== yeni.id)];
+        saveLocalAraclar(email, guncel);
+        return guncel;
+      });
+      return yeni;
+    } catch {
+      // Backend çalışmıyor — sadece localStorage'a kaydet
+      const yerelArac: Arac = {
+        ...(data as any),
+        id: yerelId(),
+        kullaniciId: email,
+        olusturmaTarihi: new Date().toISOString(),
+        guncellemeTarihi: new Date().toISOString(),
+      };
+      setAraclar(prev => {
+        const guncel = [yerelArac, ...prev];
+        saveLocalAraclar(email, guncel);
+        return guncel;
+      });
+      return yerelArac;
+    }
   }, [email, girisKontrolEt]);
 
   const araciGuncelle = useCallback(async (arac: Arac) => {
     girisKontrolEt();
 
-    const guncelArac = await apiPut<Arac>(`/araclar/${arac.id}`, arac);
-    setAraclar(prev => {
-      const guncel = prev.map(a => a.id === guncelArac.id ? guncelArac : a);
-      saveLocalAraclar(email, guncel);
-      return guncel;
-    });
+    try {
+      const guncelArac = await apiPut<Arac>(`/araclar/${arac.id}`, arac);
+      setAraclar(prev => {
+        const guncel = prev.map(a => a.id === guncelArac.id ? guncelArac : a);
+        saveLocalAraclar(email, guncel);
+        return guncel;
+      });
+    } catch {
+      // Backend çalışmıyor — sadece localStorage'ı güncelle
+      const guncelArac: Arac = {
+        ...arac,
+        guncellemeTarihi: new Date().toISOString(),
+      };
+      setAraclar(prev => {
+        const guncel = prev.map(a => a.id === guncelArac.id ? guncelArac : a);
+        saveLocalAraclar(email, guncel);
+        return guncel;
+      });
+    }
   }, [email, girisKontrolEt]);
 
   const araciSil = useCallback(async (id: string) => {
     girisKontrolEt();
 
-    await apiDelete(`/araclar/${id}`);
+    try {
+      await apiDelete(`/araclar/${id}`);
+    } catch {
+      // Backend çalışmıyor — sadece localStorage'dan sil
+    }
+    // Her durumda yerel listeden kaldır
     setAraclar(prev => {
       const guncel = prev.filter(a => a.id !== id);
       saveLocalAraclar(email, guncel);
@@ -113,7 +154,11 @@ export function AraclarProvider({ children }: { children: ReactNode }) {
   const tumVerileriSil = useCallback(async () => {
     girisKontrolEt();
 
-    await apiDelete('/yonetim/tum-veriler');
+    try {
+      await apiDelete('/yonetim/tum-veriler');
+    } catch {
+      // Backend çalışmıyor — sadece yerel temizle
+    }
     localStorage.removeItem(storageKeyFor(email));
     setAraclar([]);
   }, [email, girisKontrolEt]);

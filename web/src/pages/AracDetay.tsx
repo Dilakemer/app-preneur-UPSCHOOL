@@ -4,7 +4,8 @@ import { KATEGORI_BASLIKLARI, KATEGORI_IKONLARI, TARIH_KATEGORILERI } from '../t
 import { kalanGunHesapla, kalanGunMetni, tarihFormatla } from '../utils/tarihHesapla';
 import { durumRengiBelirle, durumRengiCSS, durumRengiGlow } from '../utils/renkBelirle';
 import { useState, useCallback } from 'react';
-import { API_URL } from '../config/api';
+import { aiTavsiyeAl as aiServis } from '../services/aiService';
+import type { AIPromptTipi } from '../services/aiService';
 
 export default function AracDetay() {
   const { id } = useParams<{ id: string }>();
@@ -15,32 +16,21 @@ export default function AracDetay() {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiContent, setAiContent] = useState<string | null>(null);
   const [aiError, setAiError] = useState<string | null>(null);
+  const [aiTip, setAiTip] = useState<AIPromptTipi>('tavsiye');
   const [silOnay, setSilOnay] = useState(false);
 
-  const aiTavsiyeAl = useCallback(async (tip: string = 'tavsiye') => {
+  const aiTavsiyeAl = useCallback(async (tip: AIPromptTipi = 'tavsiye') => {
     if (!arac) return;
+    setAiTip(tip);
     setAiLoading(true);
     setAiError(null);
     setAiContent(null);
     try {
       const email = localStorage.getItem('@caremind:kayitliEposta');
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (email) headers['X-User-Email'] = email.trim();
-
-      // Try POST with vehicle data (works without auth too)
-      const res = await fetch(`${API_URL}/ai/tavsiye?tip=${tip}`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(arac),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setAiContent(data.data?.tavsiye || 'Yanıt alınamadı.');
-      } else {
-        setAiError('AI tavsiyesi alınamadı. Lütfen daha sonra tekrar deneyin.');
-      }
+      const sonuc = await aiServis(arac, tip, email);
+      setAiContent(sonuc);
     } catch {
-      setAiError('Bağlantı hatası. Backend sunucusunun çalıştığından emin olun.');
+      setAiError('AI tavsiyesi alınırken beklenmedik bir hata oluştu.');
     } finally {
       setAiLoading(false);
     }
@@ -165,7 +155,7 @@ export default function AracDetay() {
         {aiLoading && (
           <div className="ai-loading">
             <span className="spinner" />
-            AI yanıtı bekleniyor...
+            AI yanıtı hazırlanıyor...
           </div>
         )}
 
@@ -174,9 +164,9 @@ export default function AracDetay() {
             {aiError}
             <button
               className="btn btn-secondary btn-sm mt-8"
-              onClick={() => aiTavsiyeAl('tavsiye')}
+              onClick={() => aiTavsiyeAl(aiTip)}
             >
-              Tekrar Dene
+              🔄 Tekrar Dene
             </button>
           </div>
         )}
@@ -184,17 +174,21 @@ export default function AracDetay() {
         {aiContent && (
           <>
             <div className="ai-content">{aiContent}</div>
-            <div className="flex gap-8 mt-16">
-              <button className="btn btn-secondary btn-sm" onClick={() => aiTavsiyeAl('tavsiye')}>
-                🔄 Yeniden Sor
+            <div className="flex gap-8 mt-16" style={{ flexWrap: 'wrap' }}>
+              <button className="btn btn-primary btn-sm" onClick={() => aiTavsiyeAl('tavsiye')}>
+                💡 Tavsiye
               </button>
               <button className="btn btn-secondary btn-sm" onClick={() => aiTavsiyeAl('ozet')}>
                 📋 Özet
+              </button>
+              <button className="btn btn-secondary btn-sm" onClick={() => aiTavsiyeAl('uyari')}>
+                ⚠️ Uyarılar
               </button>
             </div>
           </>
         )}
       </div>
+
 
       {/* Delete Confirmation Modal */}
       {silOnay && (

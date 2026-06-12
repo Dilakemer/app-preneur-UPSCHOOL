@@ -4,6 +4,7 @@ import { enYakinTarihBul, kalanGunMetni, tarihFormatla } from '../utils/tarihHes
 import { durumRengiBelirle, durumRengiCSS } from '../utils/renkBelirle';
 import { KATEGORI_BASLIKLARI } from '../types/Arac';
 import { useMemo } from 'react';
+import KazaAsistani from './KazaAsistani';
 
 export default function Dashboard() {
   const { araclar, yukleniyor, yenile } = useAraclar();
@@ -43,6 +44,33 @@ export default function Dashboard() {
       <div className="page-header">
         <h1>Araçlarım</h1>
         <p>Araç takip panelinize hoş geldiniz.</p>
+      </div>
+
+      {/* Kaza Asistanı */}
+      <div style={{ marginBottom: 24 }}>
+        <KazaAsistani />
+      </div>
+
+      {/* Hızlı Erişim */}
+      <div style={{ display: 'flex', gap: 10, marginBottom: 24, flexWrap: 'wrap' }}>
+        <button
+          className="btn btn-secondary btn-sm"
+          onClick={() => navigate('/giderler')}
+        >
+          💰 Araç Giderleri
+        </button>
+        <button
+          className="btn btn-secondary btn-sm"
+          onClick={() => navigate('/bildirimler')}
+        >
+          🔔 Bildirimler
+        </button>
+        <button
+          className="btn btn-secondary btn-sm"
+          onClick={() => navigate('/sigorta')}
+        >
+          🛡️ Sigorta Karşılaştır
+        </button>
       </div>
 
       {/* Stats */}

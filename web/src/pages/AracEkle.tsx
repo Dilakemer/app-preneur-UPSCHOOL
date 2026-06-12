@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { TarihSecici } from '../components/TarihSecici';
 import { useAraclar } from '../contexts/AraclarContext';
 import { VARSAYILAN_BILDIRIMLER } from '../types/Arac';
 
@@ -95,6 +96,10 @@ export default function AracEkle() {
     }
   };
 
+  const [saatPart, dakikaPart] = (bildirimSaati && bildirimSaati.includes(':'))
+    ? bildirimSaati.split(':')
+    : ['09', '00'];
+
   return (
     <div className="animate-slideUp" style={{ maxWidth: 680 }}>
       <div className="flex justify-between items-center mb-24">
@@ -157,22 +162,18 @@ export default function AracEkle() {
 
           <div className="form-row">
             <div className="form-group">
-              <label className="form-label">Muayene Tarihi</label>
-              <input className="form-input" type="date" value={muayeneTarihi} onChange={e => setMuayeneTarihi(e.target.value)} />
+              <TarihSecici label="Muayene Tarihi" value={muayeneTarihi} onChange={setMuayeneTarihi} />
             </div>
             <div className="form-group">
-              <label className="form-label">Sigorta Tarihi</label>
-              <input className="form-input" type="date" value={sigortaTarihi} onChange={e => setSigortaTarihi(e.target.value)} />
+              <TarihSecici label="Sigorta Tarihi" value={sigortaTarihi} onChange={setSigortaTarihi} />
             </div>
           </div>
           <div className="form-row">
             <div className="form-group">
-              <label className="form-label">Kasko Tarihi</label>
-              <input className="form-input" type="date" value={kaskoTarihi} onChange={e => setKaskoTarihi(e.target.value)} />
+              <TarihSecici label="Kasko Tarihi" value={kaskoTarihi} onChange={setKaskoTarihi} />
             </div>
             <div className="form-group">
-              <label className="form-label">Bakım Tarihi</label>
-              <input className="form-input" type="date" value={bakimTarihi} onChange={e => setBakimTarihi(e.target.value)} />
+              <TarihSecici label="Bakım Tarihi" value={bakimTarihi} onChange={setBakimTarihi} />
             </div>
           </div>
 
@@ -211,12 +212,31 @@ export default function AracEkle() {
 
           <div className="form-group mt-8">
             <label className="form-label">Bildirim Saati</label>
-            <input
-              className="form-input"
-              type="time"
-              value={bildirimSaati}
-              onChange={e => setBildirimSaati(e.target.value)}
-            />
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <select
+                className="form-input"
+                style={{ flex: 1, textAlign: 'center', cursor: 'pointer' }}
+                value={saatPart}
+                onChange={e => setBildirimSaati(`${e.target.value}:${dakikaPart}`)}
+              >
+                {Array.from({ length: 24 }, (_, i) => {
+                  const s = String(i).padStart(2, '0');
+                  return <option key={s} value={s}>{s}</option>;
+                })}
+              </select>
+              <span style={{ fontSize: 18, fontWeight: 700, color: 'var(--color-text-secondary)' }}>:</span>
+              <select
+                className="form-input"
+                style={{ flex: 1, textAlign: 'center', cursor: 'pointer' }}
+                value={dakikaPart}
+                onChange={e => setBildirimSaati(`${saatPart}:${e.target.value}`)}
+              >
+                {Array.from({ length: 60 }, (_, i) => {
+                  const d = String(i).padStart(2, '0');
+                  return <option key={d} value={d}>{d}</option>;
+                })}
+              </select>
+            </div>
           </div>
         </div>
 

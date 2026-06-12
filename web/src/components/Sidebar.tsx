@@ -2,11 +2,13 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 const NAV_ITEMS = [
-  { to: '/', label: 'Araclarim', icon: 'A' },
-  { to: '/profil', label: 'Profil', icon: 'P' },
-  { to: '/sigorta', label: 'Sigorta', icon: 'S' },
-  { to: '/demo', label: 'Mobil Demo', icon: 'M' },
-  { to: '/ayarlar', label: 'Ayarlar', icon: 'D' },
+  { to: '/', label: 'Araçlarım', icon: '🚗' },
+  { to: '/bildirimler', label: 'Bildirimler', icon: '🔔' },
+  { to: '/giderler', label: 'Araç Giderleri', icon: '💰' },
+  { to: '/sigorta', label: 'Sigorta', icon: '🛡️' },
+  { to: '/profil', label: 'Profil', icon: '👤' },
+  { to: '/demo', label: 'Mobil Demo', icon: '📱' },
+  { to: '/ayarlar', label: 'Ayarlar', icon: '⚙️' },
 ];
 
 interface SidebarProps {

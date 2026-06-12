@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { AraclarProvider } from './contexts/AraclarContext';
+import { GiderlerProvider } from './contexts/GiderlerContext';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import AracDetay from './pages/AracDetay';
@@ -10,6 +11,8 @@ import Ayarlar from './pages/Ayarlar';
 import SigortaKarsilastir from './pages/SigortaKarsilastir';
 import Login from './pages/Login';
 import MobilDemo from './pages/MobilDemo';
+import Bildirimler from './pages/Bildirimler';
+import AracGiderleri from './pages/AracGiderleri';
 import ProtectedRoute from './components/ProtectedRoute';
 
 export default function App() {
@@ -17,28 +20,32 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <AraclarProvider>
-          <Routes>
-            {/* Login page — no sidebar */}
-            <Route path="/giris" element={<Login />} />
+          <GiderlerProvider>
+            <Routes>
+              {/* Login page — no sidebar */}
+              <Route path="/giris" element={<Login />} />
 
-            {/* Main app with sidebar layout */}
-            <Route
-              element={
-                <ProtectedRoute>
-                  <Layout />
-                </ProtectedRoute>
-              }
-            >
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/arac/ekle" element={<AracEkle />} />
-              <Route path="/arac/:id" element={<AracDetay />} />
-              <Route path="/arac/:id/duzenle" element={<AracEkle />} />
-              <Route path="/profil" element={<Profil />} />
-              <Route path="/ayarlar" element={<Ayarlar />} />
-              <Route path="/sigorta" element={<SigortaKarsilastir />} />
-              <Route path="/demo" element={<MobilDemo />} />
-            </Route>
-          </Routes>
+              {/* Main app with sidebar layout */}
+              <Route
+                element={
+                  <ProtectedRoute>
+                    <Layout />
+                  </ProtectedRoute>
+                }
+              >
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/arac/ekle" element={<AracEkle />} />
+                <Route path="/arac/:id" element={<AracDetay />} />
+                <Route path="/arac/:id/duzenle" element={<AracEkle />} />
+                <Route path="/profil" element={<Profil />} />
+                <Route path="/ayarlar" element={<Ayarlar />} />
+                <Route path="/sigorta" element={<SigortaKarsilastir />} />
+                <Route path="/demo" element={<MobilDemo />} />
+                <Route path="/bildirimler" element={<Bildirimler />} />
+                <Route path="/giderler" element={<AracGiderleri />} />
+              </Route>
+            </Routes>
+          </GiderlerProvider>
         </AraclarProvider>
       </AuthProvider>
     </BrowserRouter>

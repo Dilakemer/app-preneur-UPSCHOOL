@@ -9,6 +9,8 @@ export default function Login() {
   const [mod, setMod] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
   const [isim, setIsim] = useState('');
+  const [sifre, setSifre] = useState('');
+  const [sifreGoster, setSifreGoster] = useState(false);
   const [loading, setLoading] = useState(false);
   const hedef = (location.state as { from?: string } | null)?.from || '/';
 
@@ -23,11 +25,10 @@ export default function Login() {
     setLoading(true);
     try {
       if (mod === 'login') {
-        await girisYap(email);
+        await girisYap(email, sifre);
       } else {
-        await kayitOl(isim, email);
+        await kayitOl(isim, email, sifre);
       }
-      // Check if login was successful (no error set)
       setTimeout(() => {
         const status = localStorage.getItem('@caremind:isLoggedIn');
         if (status === 'true') {
@@ -40,6 +41,12 @@ export default function Login() {
     }
   };
 
+  const handleModDegistir = () => {
+    setHata(null);
+    setSifre('');
+    setMod(mod === 'login' ? 'register' : 'login');
+  };
+
   return (
     <div className="login-page">
       <div className="login-card">
@@ -48,8 +55,9 @@ export default function Login() {
           {mod === 'login' ? "CareMind'e Giriş" : "CareMind'e Kayıt"}
         </h1>
         <p className="login-desc">
-          Profiliniz araçlarınızı ayırmak, veriyi doğru hesapla eşlemek ve
-          senkronizasyon için kullanılır.
+          {mod === 'login'
+            ? 'Hesabınıza giriş yaparak araçlarınızı takip edin.'
+            : 'Araçlarınızı takip etmek için ücretsiz hesap oluşturun.'}
         </p>
 
         <form className="login-form" onSubmit={handleSubmit}>
@@ -62,6 +70,7 @@ export default function Login() {
                 value={isim}
                 onChange={e => setIsim(e.target.value)}
                 autoComplete="name"
+                required
               />
             </div>
           )}
@@ -74,7 +83,37 @@ export default function Login() {
               value={email}
               onChange={e => { setEmail(e.target.value); setHata(null); }}
               autoComplete="email"
+              required
             />
+          </div>
+
+          <div className="login-input-wrap">
+            <span className="icon">🔒</span>
+            <input
+              type={sifreGoster ? 'text' : 'password'}
+              placeholder={mod === 'register' ? 'Şifre (en az 6 karakter)' : 'Şifre'}
+              value={sifre}
+              onChange={e => { setSifre(e.target.value); setHata(null); }}
+              autoComplete={mod === 'login' ? 'current-password' : 'new-password'}
+              required
+              minLength={6}
+            />
+            <button
+              type="button"
+              onClick={() => setSifreGoster(!sifreGoster)}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '0 4px',
+                color: 'var(--color-text-secondary)',
+                fontSize: 16,
+                flexShrink: 0,
+              }}
+              aria-label={sifreGoster ? 'Şifreyi gizle' : 'Şifreyi göster'}
+            >
+              {sifreGoster ? '🙈' : '👁️'}
+            </button>
           </div>
 
           {hata && <p className="form-error">{hata}</p>}
@@ -89,9 +128,7 @@ export default function Login() {
         </form>
 
         <div className="login-switch">
-          <button
-            onClick={() => { setHata(null); setMod(mod === 'login' ? 'register' : 'login'); }}
-          >
+          <button onClick={handleModDegistir}>
             {mod === 'login'
               ? 'Hesabınız yok mu? Kayıt olun'
               : 'Zaten hesabınız var mı? Giriş yapın'}
