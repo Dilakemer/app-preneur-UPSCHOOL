@@ -352,11 +352,13 @@ export default function SigortaKarsilastir() {
                 const isFeatured = teklif.badges.some(b => b.renk === 'gold');
 
                 return (
-                  <div
+                  <a
                     key={teklif.id}
+                    href={teklifLinkiOlustur(teklif, arac)}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className={`sigorta-card-v2 ${isFeatured ? 'featured' : ''}`}
-                    style={{ animation: `slideUp 0.35s ease ${i * 60}ms both` }}
-                    onClick={() => window.open(teklifLinkiOlustur(teklif, arac), '_blank', 'noopener,noreferrer')}
+                    style={{ animation: `slideUp 0.35s ease ${i * 60}ms both`, textDecoration: 'none', color: 'inherit', display: 'block' }}
                   >
                     {/* Başlık + fiyat */}
                     <div className="sigorta-card-header">
@@ -419,7 +421,7 @@ export default function SigortaKarsilastir() {
                         Teklif Al →
                       </span>
                     </div>
-                  </div>
+                  </a>
                 );
               })}
             </div>

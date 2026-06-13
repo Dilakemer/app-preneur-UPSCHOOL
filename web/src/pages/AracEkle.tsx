@@ -58,7 +58,7 @@ export default function AracEkle() {
   const [gun30, setGun30] = useState(true);
   const [gun7, setGun7] = useState(true);
   const [gun1, setGun1] = useState(true);
-  const [bildirimSaati, setBildirimSaati] = useState('09:00');
+  const [bildirimSaati, setBildirimSaati] = useState(() => localStorage.getItem('@caremind:bildirim_saat') || '09:00');
   const [kaydediliyor, setKaydediliyor] = useState(false);
   const [hata, setHata] = useState<string | null>(null);
 
