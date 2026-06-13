@@ -7,6 +7,36 @@ import { VARSAYILAN_BILDIRIMLER } from '../types/Arac';
 
 const MAX_YEAR = new Date().getFullYear();
 
+// Türkiye'de popüler araç markaları ve modelleri
+const ARAC_MARKALARI: Record<string, string[]> = {
+  'Toyota': ['Corolla', 'Yaris', 'C-HR', 'RAV4', 'Camry', 'Hilux', 'Land Cruiser', 'Avensis', 'Verso', 'Auris'],
+  'Volkswagen': ['Golf', 'Polo', 'Passat', 'Tiguan', 'T-Roc', 'Caddy', 'Transporter', 'Touareg', 'Arteon', 'ID.4'],
+  'Renault': ['Clio', 'Megane', 'Symbol', 'Fluence', 'Kadjar', 'Captur', 'Duster', 'Talisman', 'Zoe', 'Arkana'],
+  'Ford': ['Focus', 'Fiesta', 'Mondeo', 'Kuga', 'EcoSport', 'Puma', 'Mustang', 'Explorer', 'Transit', 'Ranger'],
+  'Hyundai': ['i10', 'i20', 'i30', 'Elantra', 'Tucson', 'Santa Fe', 'Kona', 'Accent', 'Ioniq', 'Bayon'],
+  'Fiat': ['Egea', 'Tipo', 'Punto', 'Linea', 'Doblo', 'Fiorino', 'Ducato', '500', 'Panda', 'Bravo'],
+  'Honda': ['Civic', 'Jazz', 'CR-V', 'HR-V', 'Accord', 'City', 'FR-V', 'Insight', 'e', 'ZR-V'],
+  'Mercedes-Benz': ['A Serisi', 'B Serisi', 'C Serisi', 'E Serisi', 'S Serisi', 'GLA', 'GLC', 'GLE', 'GLB', 'CLA'],
+  'BMW': ['1 Serisi', '2 Serisi', '3 Serisi', '4 Serisi', '5 Serisi', '7 Serisi', 'X1', 'X3', 'X5', 'X7'],
+  'Audi': ['A1', 'A3', 'A4', 'A5', 'A6', 'Q2', 'Q3', 'Q5', 'Q7', 'A8'],
+  'Peugeot': ['208', '308', '508', '2008', '3008', '5008', 'Partner', 'Expert', 'Traveller', 'e-208'],
+  'Citroën': ['C3', 'C4', 'C5', 'C5 Aircross', 'C3 Aircross', 'Berlingo', 'Jumpy', 'Jumper', 'ë-C4', 'C4 X'],
+  'Opel': ['Astra', 'Corsa', 'Insignia', 'Mokka', 'Crossland', 'Grandland', 'Zafira', 'Combo', 'Vivaro', 'Adam'],
+  'Nissan': ['Micra', 'Juke', 'Qashqai', 'X-Trail', 'Navara', 'Pulsar', 'Note', 'Leaf', 'Ariya', 'Townstar'],
+  'Skoda': ['Fabia', 'Octavia', 'Superb', 'Karoq', 'Kodiaq', 'Scala', 'Kamiq', 'Enyaq', 'Rapid', 'Roomster'],
+  'Seat': ['Ibiza', 'Leon', 'Ateca', 'Arona', 'Tarraco', 'Mii', 'Alhambra', 'Altea', 'Toledo', 'Exeo'],
+  'Kia': ['Picanto', 'Rio', 'Ceed', 'Sportage', 'Sorento', 'Niro', 'Stonic', 'XCeed', 'EV6', 'Stinger'],
+  'Mazda': ['2', '3', '6', 'CX-3', 'CX-5', 'CX-30', 'MX-5', 'CX-60', 'CX-9', 'MX-30'],
+  'Volvo': ['V40', 'V60', 'V90', 'S60', 'S90', 'XC40', 'XC60', 'XC90', 'C40', 'EX30'],
+  'Subaru': ['Impreza', 'Forester', 'Outback', 'Legacy', 'XV', 'WRX', 'BRZ', 'Levorg', 'Ascent', 'Solterra'],
+  'Suzuki': ['Swift', 'Vitara', 'S-Cross', 'Jimny', 'Ignis', 'Baleno', 'Across', 'Swace', 'Celerio', 'Alto'],
+  'Mitsubishi': ['Colt', 'Lancer', 'Outlander', 'Eclipse Cross', 'ASX', 'L200', 'Pajero', 'Space Star', 'Mirage', 'Galant'],
+  'Chevrolet': ['Aveo', 'Cruze', 'Spark', 'Captiva', 'Equinox', 'Malibu', 'Camaro', 'Corvette', 'Trax', 'Blazer'],
+  'Dacia': ['Sandero', 'Logan', 'Duster', 'Spring', 'Jogger', 'Lodgy', 'Dokker', 'Stepway', 'Pick-Up', 'Nova'],
+  'Alfa Romeo': ['Giulietta', 'Giulia', 'Stelvio', 'Tonale', '147', '156', '159', 'MiTo', '4C', 'Spider'],
+  'Diğer': [],
+};
+
 export default function AracEkle() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
@@ -15,8 +45,10 @@ export default function AracEkle() {
   const mode = mevcutArac ? 'edit' : 'create';
 
   const [plaka, setPlaka] = useState('');
-  const [marka, setMarka] = useState('');
-  const [model, setModel] = useState('');
+  const [markaSecim, setMarkaSecim] = useState(''); // dropdown seçimi
+  const [markaOzel, setMarkaOzel] = useState('');  // "Diğer" için serbest metin
+  const [modelSecim, setModelSecim] = useState(''); // dropdown seçimi
+  const [modelOzel, setModelOzel] = useState('');  // "Diğer" için serbest metin
   const [yil, setYil] = useState('');
   const [muayeneTarihi, setMuayeneTarihi] = useState('');
   const [sigortaTarihi, setSigortaTarihi] = useState('');
@@ -30,11 +62,34 @@ export default function AracEkle() {
   const [kaydediliyor, setKaydediliyor] = useState(false);
   const [hata, setHata] = useState<string | null>(null);
 
+  // Hesaplanan marka/model değerleri
+  const marka = markaSecim === 'Diğer' ? markaOzel : markaSecim;
+  const model = modelSecim === 'Diğer' ? modelOzel : modelSecim;
+  const mevcutMarkaModelleri = markaSecim && markaSecim !== 'Diğer' ? ARAC_MARKALARI[markaSecim] ?? [] : [];
+
   useEffect(() => {
     if (!mevcutArac) return;
     setPlaka(mevcutArac.plaka);
-    setMarka(mevcutArac.marka);
-    setModel(mevcutArac.model);
+
+    // Marka: listede var mı kontrol et
+    const mevcutMarka = mevcutArac.marka || '';
+    if (mevcutMarka && ARAC_MARKALARI[mevcutMarka] !== undefined) {
+      setMarkaSecim(mevcutMarka);
+    } else if (mevcutMarka) {
+      setMarkaSecim('Diğer');
+      setMarkaOzel(mevcutMarka);
+    }
+
+    // Model: marka modellerinde var mı kontrol et
+    const mevcutModel = mevcutArac.model || '';
+    const markaModelleri = mevcutMarka ? (ARAC_MARKALARI[mevcutMarka] ?? []) : [];
+    if (mevcutModel && markaModelleri.includes(mevcutModel)) {
+      setModelSecim(mevcutModel);
+    } else if (mevcutModel) {
+      setModelSecim('Diğer');
+      setModelOzel(mevcutModel);
+    }
+
     setYil(String(mevcutArac.yil));
     setMuayeneTarihi(mevcutArac.muayeneTarihi || '');
     setSigortaTarihi(mevcutArac.sigortaTarihi || '');
@@ -133,11 +188,71 @@ export default function AracEkle() {
           <div className="form-row">
             <div className="form-group">
               <label className="form-label">Marka</label>
-              <input className="form-input" value={marka} onChange={e => setMarka(e.target.value)} placeholder="Toyota" />
+              <select
+                className="form-input"
+                value={markaSecim}
+                onChange={e => {
+                  setMarkaSecim(e.target.value);
+                  setMarkaOzel('');
+                  setModelSecim('');
+                  setModelOzel('');
+                }}
+                style={{ cursor: 'pointer' }}
+              >
+                <option value="">— Marka seçin —</option>
+                {Object.keys(ARAC_MARKALARI).map(m => (
+                  <option key={m} value={m}>{m}</option>
+                ))}
+              </select>
+              {markaSecim === 'Diğer' && (
+                <input
+                  className="form-input"
+                  style={{ marginTop: 8 }}
+                  value={markaOzel}
+                  onChange={e => setMarkaOzel(e.target.value)}
+                  placeholder="Marka adını yazın"
+                />
+              )}
             </div>
             <div className="form-group">
               <label className="form-label">Model</label>
-              <input className="form-input" value={model} onChange={e => setModel(e.target.value)} placeholder="Corolla" />
+              {markaSecim && markaSecim !== 'Diğer' && mevcutMarkaModelleri.length > 0 ? (
+                <>
+                  <select
+                    className="form-input"
+                    value={modelSecim}
+                    onChange={e => {
+                      setModelSecim(e.target.value);
+                      setModelOzel('');
+                    }}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <option value="">— Model seçin —</option>
+                    {mevcutMarkaModelleri.map(m => (
+                      <option key={m} value={m}>{m}</option>
+                    ))}
+                    <option value="Diğer">Diğer…</option>
+                  </select>
+                  {modelSecim === 'Diğer' && (
+                    <input
+                      className="form-input"
+                      style={{ marginTop: 8 }}
+                      value={modelOzel}
+                      onChange={e => setModelOzel(e.target.value)}
+                      placeholder="Model adını yazın"
+                    />
+                  )}
+                </>
+              ) : (
+                <input
+                  className="form-input"
+                  value={markaSecim === 'Diğer' ? modelOzel : model}
+                  onChange={e => markaSecim === 'Diğer' ? setModelOzel(e.target.value) : setModelOzel(e.target.value)}
+                  placeholder={markaSecim ? 'Model adını yazın' : 'Önce marka seçin'}
+                  disabled={!markaSecim}
+                  style={{ opacity: !markaSecim ? 0.5 : 1 }}
+                />
+              )}
             </div>
           </div>
 

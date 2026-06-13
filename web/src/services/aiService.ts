@@ -1,7 +1,18 @@
 import type { Arac } from '../types/Arac';
 import { API_URL } from '../config/api';
 
-export type AIPromptTipi = 'tavsiye' | 'ozet' | 'uyari';
+export type AIPromptTipi = 'tavsiye' | 'ozet' | 'uyari' | 'sohbet' | 'gider-analiz';
+
+export interface SohbetMesaji {
+  rol: 'kullanici' | 'asistan';
+  icerik: string;
+}
+
+export interface GiderOzeti {
+  kategori: string;
+  tutar: number;
+  adet: number;
+}
 
 function gunFarki(tarih: string): number {
   const bugun = new Date();
@@ -12,9 +23,9 @@ function gunFarki(tarih: string): number {
 }
 
 /**
- * Backend yokken veya hata olduğunda yerel mantıkla tavsiye üretir.
+ * Backend yokken yerel mantıkla tavsiye üretir (fallback).
  */
-export function yerelTavsiyeOlustur(arac: Arac, tip: AIPromptTipi): string {
+export function yerelTavsiyeOlustur(arac: Arac, tip: AIPromptTipi, soru?: string): string {
   const aracAdi = `${arac.marka} ${arac.model} (${arac.yil})`;
   const tarihler = [
     { ad: 'muayene', tarih: arac.muayeneTarihi },
@@ -27,7 +38,10 @@ export function yerelTavsiyeOlustur(arac: Arac, tip: AIPromptTipi): string {
     .sort((a, b) => a.kalanGun - b.kalanGun);
 
   if (!tarihler.length) {
-    return `${aracAdi} için kayıtlı tarih bulunmuyor. Muayene, sigorta, kasko ve bakım tarihlerinizi ekleyerek hatırlatıcıları açık tutmanızı öneririm.`;
+    if (soru?.trim()) {
+      return `${aracAdi} için henüz tarih kaydı yok. Muayene, sigorta, kasko veya bakım tarihi eklerseniz çok daha kapsamlı yardımcı olabilirim!`;
+    }
+    return `${aracAdi} için kayıtlı takip tarihi bulunmuyor. Muayene, sigorta, kasko ve bakım tarihlerinizi ekleyerek araçınızı düzenli takip altına alabilirsiniz.`;
   }
 
   const gecmis = tarihler.filter((item) => item.kalanGun < 0);
@@ -37,52 +51,52 @@ export function yerelTavsiyeOlustur(arac: Arac, tip: AIPromptTipi): string {
 
   if (tip === 'uyari') {
     if (gecmis.length) {
-      return `⚠️ ${aracAdi} için ${gecmis.map((i) => i.ad).join(', ')} tarihi geçmiş görünüyor. En kısa sürede randevu veya yenileme işlemini tamamlayın.`;
+      return `⚠️ ${aracAdi} için ${gecmis.map((i) => i.ad).join(' ve ')} tarihi geçmiş görünüyor. En kısa sürede ilgili işlemi tamamlamanızı öneririm.`;
     }
     if (kritik.length) {
-      return `🔴 ${aracAdi} için ${kritik.map((i) => `${i.ad} (${i.kalanGun} gün)`).join(', ')} dolmak üzere! Bugün kontrol edip gerekli işlemi planlayın.`;
+      return `🔴 ${aracAdi} için ${kritik.map((i) => `${i.ad} (${i.kalanGun} gün)`).join(', ')} dolmak üzere. Bugün işlem planlamanızı öneririm.`;
     }
-    return '✅ Yaklaşan kritik tarih bulunmamaktadır.';
+    return '✅ Herhangi bir acil durum yok, yaklaşan tarihleriniz kontrol altında.';
   }
 
   if (tip === 'ozet') {
     const durum =
       siradaki.kalanGun < 0
         ? `${siradaki.ad} tarihi ${Math.abs(siradaki.kalanGun)} gün geçmiş`
-        : `sıradaki tarih ${siradaki.ad}, ${siradaki.kalanGun} gün kalmış`;
-    return `${aracAdi} kaydında ${tarihler.length} takip tarihi var; ${durum}. Hatırlatıcıları açık tutup belge yenilemelerini son haftaya bırakmamanız iyi olur.`;
+        : `sıradaki tarih ${siradaki.ad}, ${siradaki.kalanGun} gün kaldı`;
+    return `${aracAdi} için ${tarihler.length} takip tarihi var; ${durum}. Hatırlatıcılarınızı açık tutmanızı öneririm.`;
   }
 
-  // tip === 'tavsiye'
   if (gecmis.length) {
-    return `${aracAdi} için öncelik ${gecmis.map((i) => i.ad).join(', ')} işlemlerinde; bu tarihler geçmiş görünüyor. Ardından yaklaşan bakım ve belge tarihlerini kontrol edip hatırlatıcıları açık bırakın.`;
+    return `${aracAdi} için öncelikli konu ${gecmis.map((i) => i.ad).join(' ve ')} işlemleri; bu tarihler geçmiş görünüyor. Tamamladıktan sonra diğer yaklaşan tarihleri de kontrol edin.`;
   }
   if (kritik.length || yaklasan.length) {
     const liste = [...kritik, ...yaklasan].map((i) => `${i.ad} (${i.kalanGun} gün)`).join(', ');
-    return `${aracAdi} için yaklaşan takipler: ${liste}. Randevu ve yenileme işlemlerini şimdiden planlayarak son gün yoğunluğunu önleyebilirsiniz.`;
+    return `${aracAdi} için yaklaşan takipler: ${liste}. Randevu ve yenileme işlemlerini şimdiden planlamanızı öneririm.`;
   }
-  return `${aracAdi} için en yakın takip ${siradaki.ad}; ${siradaki.kalanGun} gün kalmış. Periyodik bakım kaydını güncel tutun ve sigorta/kasko belgelerinizi yenileme döneminden önce kontrol edin.`;
+  return `${aracAdi} için en yakın tarih ${siradaki.ad}; ${siradaki.kalanGun} gün kaldı. Periyodik bakımınızı ve belgelerinizi takipte tutun.`;
 }
 
 /**
- * AI tavsiyesi alır. Backend'e bağlanır, başarısız olursa yerel hesaplama döner.
+ * Tekil AI tavsiyesi — backend'e bağlanır, başarısız olursa yerel hesaplama döner.
  */
 export async function aiTavsiyeAl(
   arac: Arac,
   tip: AIPromptTipi = 'tavsiye',
   email?: string | null,
+  soru?: string,
 ): Promise<string> {
   try {
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     if (email) headers['X-User-Email'] = email.trim();
 
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000);
+    const timeout = setTimeout(() => controller.abort(), 10000);
 
     const res = await fetch(`${API_URL}/ai/tavsiye?tip=${tip}`, {
       method: 'POST',
       headers,
-      body: JSON.stringify(arac),
+      body: JSON.stringify({ ...arac, soru }),
       signal: controller.signal,
     });
     clearTimeout(timeout);
@@ -90,13 +104,89 @@ export async function aiTavsiyeAl(
     if (res.ok) {
       const data = await res.json();
       const tavsiye: string = data.data?.tavsiye;
-      if (tavsiye && tavsiye.length > 0) {
-        return tavsiye;
-      }
+      if (tavsiye && tavsiye.length > 0) return tavsiye;
     }
   } catch {
     // Backend çalışmıyor veya timeout — yerel fallback'e düş
   }
 
-  return yerelTavsiyeOlustur(arac, tip);
+  return yerelTavsiyeOlustur(arac, tip, soru);
+}
+
+/**
+ * Multi-turn sohbet — Gemini önceki mesajları bilerek yanıt verir.
+ */
+export async function sohbetMesajiGonder(
+  arac: Arac,
+  gecmis: SohbetMesaji[],
+  yeniMesaj: string,
+  email?: string | null,
+): Promise<string> {
+  try {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (email) headers['X-User-Email'] = email.trim();
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+
+    const res = await fetch(`${API_URL}/ai/sohbet`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ arac, gecmis, yeniMesaj }),
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+
+    if (res.ok) {
+      const data = await res.json();
+      const yanit: string = data.data?.yanit;
+      if (yanit && yanit.length > 0) return yanit;
+    }
+  } catch {
+    // fallback
+  }
+
+  return yerelTavsiyeOlustur(arac, 'sohbet', yeniMesaj);
+}
+
+/**
+ * Gider analizi — gider özetini AI ile analiz eder.
+ */
+export async function giderAnalizAl(
+  arac: Arac,
+  giderler: GiderOzeti[],
+  toplamTutar: number,
+  email?: string | null,
+  soru?: string,
+): Promise<string> {
+  if (!giderler.length) {
+    return 'Henüz gider kaydı bulunmuyor. Gider ekledikten sonra AI analizi yapılabilir.';
+  }
+
+  try {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (email) headers['X-User-Email'] = email.trim();
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 12000);
+
+    const res = await fetch(`${API_URL}/ai/gider-analiz`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ arac, giderler, toplamTutar, soru }),
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+
+    if (res.ok) {
+      const data = await res.json();
+      const analiz: string = data.data?.analiz;
+      if (analiz && analiz.length > 0) return analiz;
+    }
+  } catch {
+    // fallback
+  }
+
+  const enYuksek = [...giderler].sort((a, b) => b.tutar - a.tutar)[0];
+  return `${arac.marka} ${arac.model} için toplam ${toplamTutar.toFixed(2)} ₺ gider kaydedilmiş. En yüksek harcama ${enYuksek?.kategori ?? 'belirsiz'} (${enYuksek?.tutar.toFixed(2) ?? 0} ₺). Giderlerinizi düzenli kayıt altına almaya devam edin.`;
 }

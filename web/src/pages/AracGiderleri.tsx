@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { TarihSecici } from '../components/TarihSecici';
 import { useGiderler, KATEGORI_BILGI, type GiderKategori } from '../contexts/GiderlerContext';
 import { useAraclar } from '../contexts/AraclarContext';
+import { giderAnalizAl, type GiderOzeti } from '../services/aiService';
 
 const KATEGORILER = Object.keys(KATEGORI_BILGI) as GiderKategori[];
 
@@ -70,6 +71,11 @@ export default function AracGiderleri() {
   const [donemFiltre, setDonemFiltre] = useState<'tumu' | 'bu-ay' | 'bu-yil'>('tumu');
   const [silOnay, setSilOnay] = useState<string | null>(null);
 
+  // AI Gider Analizi
+  const [aiAnalizYukleniyor, setAiAnalizYukleniyor] = useState(false);
+  const [aiAnalizIcerik, setAiAnalizIcerik] = useState<string | null>(null);
+  const [aiAnalizHata, setAiAnalizHata] = useState<string | null>(null);
+
   const aracGiderleri = useMemo(() =>
     giderler.filter(g => g.aracId === secilenArac),
     [giderler, secilenArac]
@@ -122,6 +128,36 @@ export default function AracGiderleri() {
     setSilOnay(null);
   }, [giderSil]);
 
+  const handleAiAnaliz = useCallback(async () => {
+    const secilenAracObj = araclar.find(a => a.id === secilenArac);
+    if (!secilenAracObj || aracGiderleri.length === 0) return;
+
+    setAiAnalizYukleniyor(true);
+    setAiAnalizIcerik(null);
+    setAiAnalizHata(null);
+
+    // Kategori bazlı özet oluştur
+    const ozet: Record<string, GiderOzeti> = {};
+    aracGiderleri.forEach(g => {
+      const label = KATEGORI_BILGI[g.kategori]?.label ?? g.kategori;
+      if (!ozet[label]) ozet[label] = { kategori: label, tutar: 0, adet: 0 };
+      ozet[label].tutar += g.tutar;
+      ozet[label].adet += 1;
+    });
+    const giderListesi = Object.values(ozet);
+    const toplam = aracGiderleri.reduce((t, g) => t + g.tutar, 0);
+    const email = localStorage.getItem('@caremind:kayitliEposta');
+
+    try {
+      const analiz = await giderAnalizAl(secilenAracObj, giderListesi, toplam, email);
+      setAiAnalizIcerik(analiz);
+    } catch {
+      setAiAnalizHata('Analiz alınırken bir hata oluştu. Lütfen tekrar deneyin.');
+    } finally {
+      setAiAnalizYukleniyor(false);
+    }
+  }, [secilenArac, araclar, aracGiderleri]);
+
   return (
     <div className="animate-slideUp">
       <div className="page-header">
@@ -159,6 +195,68 @@ export default function AracGiderleri() {
             <div className="card mb-24">
               <h3 style={{ fontWeight: 800, marginBottom: 20 }}>Kategori Dağılımı</h3>
               <DonutChart data={grafikData} />
+
+              {/* AI Gider Analizi */}
+              <div style={{
+                marginTop: 20,
+                paddingTop: 16,
+                borderTop: '1px solid var(--color-border)',
+              }}>
+                {!aiAnalizIcerik && !aiAnalizYukleniyor && (
+                  <button
+                    className="btn btn-secondary btn-sm"
+                    onClick={handleAiAnaliz}
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.1))',
+                      border: '1px solid rgba(99,102,241,0.35)',
+                      color: '#a5b4fc',
+                      display: 'flex', alignItems: 'center', gap: 8,
+                    }}
+                  >
+                    🤖 AI ile Gider Analizi Yap
+                  </button>
+                )}
+
+                {aiAnalizYukleniyor && (
+                  <div className="ai-loading">
+                    <span className="spinner" />
+                    Gemini giderlerinizi analiz ediyor...
+                  </div>
+                )}
+
+                {aiAnalizHata && (
+                  <div style={{ color: 'var(--color-red)', fontSize: 13 }}>
+                    {aiAnalizHata}
+                    <button className="btn btn-secondary btn-sm mt-8" onClick={handleAiAnaliz}>🔄 Tekrar Dene</button>
+                  </div>
+                )}
+
+                {aiAnalizIcerik && (
+                  <div>
+                    <div style={{
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                      marginBottom: 10,
+                    }}>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: '#a5b4fc' }}>🤖 AI Analizi</span>
+                      <button
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => { setAiAnalizIcerik(null); setAiAnalizHata(null); }}
+                        style={{ fontSize: 11 }}
+                      >Kapat</button>
+                    </div>
+                    <div className="ai-content" style={{ marginTop: 0 }}>
+                      {aiAnalizIcerik}
+                    </div>
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      onClick={handleAiAnaliz}
+                      style={{ marginTop: 8, fontSize: 12 }}
+                    >
+                      🔄 Yenile
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 

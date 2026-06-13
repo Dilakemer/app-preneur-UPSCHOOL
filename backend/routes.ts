@@ -11,7 +11,7 @@ import {
   getAracByPlaka,
   generateBildirimRaporu,
 } from './database';
-import { getAIAdvice, onbellekTemizle, aiDurumRaporu, type AIPromptTipi } from './aiService';
+import { getAIAdvice, sohbetDevamEttir, giderAnaliziYap, onbellekTemizle, aiDurumRaporu, type AIPromptTipi, type SohbetMesaji, type GiderOzeti } from './aiService';
 import { fetchQuotes } from './insurers';
 import { asyncHandler, validateAracInput } from './middleware';
 import { successResponse, errorResponse, getClientIP } from './apiLayer';
@@ -277,7 +277,7 @@ router.get('/ai/tavsiye/:id', asyncHandler(async (req: Request, res: Response) =
     return errorResponse(res, 'Araç bulunamadı', 404);
   }
 
-  const izinliTipler: AIPromptTipi[] = ['tavsiye', 'ozet', 'uyari'];
+  const izinliTipler: AIPromptTipi[] = ['tavsiye', 'ozet', 'uyari', 'sohbet'];
   const tip = (req.query.tip as AIPromptTipi) ?? 'tavsiye';
 
   if (!izinliTipler.includes(tip)) {
@@ -306,7 +306,7 @@ router.post('/ai/tavsiye', asyncHandler(async (req: Request, res: Response) => {
     return errorResponse(res, 'Araç bilgisi eksik', 400);
   }
 
-  const izinliTipler: AIPromptTipi[] = ['tavsiye', 'ozet', 'uyari'];
+  const izinliTipler: AIPromptTipi[] = ['tavsiye', 'ozet', 'uyari', 'sohbet'];
   const tip = (req.query.tip as AIPromptTipi) ?? 'tavsiye';
 
   if (!izinliTipler.includes(tip)) {
@@ -324,6 +324,63 @@ router.post('/ai/tavsiye', asyncHandler(async (req: Request, res: Response) => {
     return successResponse(res, { tavsiye, tip }, 'AI yanıtı başarıyla alındı');
   } catch {
     return errorResponse(res, 'AI tavsiyesi alınırken bir hata oluştu', 500);
+  }
+}));
+
+// ============ AI SOHBET ============
+
+/**
+ * POST /api/ai/sohbet
+ * Multi-turn sohbet — Gemini tüm geçmiş konuşmayı görür.
+ * Body: { arac: Arac, gecmis: SohbetMesaji[], yeniMesaj: string }
+ */
+router.post('/ai/sohbet', asyncHandler(async (req: Request, res: Response) => {
+  const { arac, gecmis, yeniMesaj } = req.body;
+
+  if (!arac || !arac.id) {
+    return errorResponse(res, 'Araç bilgisi eksik', 400);
+  }
+  if (!yeniMesaj || typeof yeniMesaj !== 'string' || !yeniMesaj.trim()) {
+    return errorResponse(res, 'Mesaj boş olamaz', 400);
+  }
+
+  const gecmisMesajlar: SohbetMesaji[] = Array.isArray(gecmis) ? gecmis : [];
+
+  try {
+    const kimlik = getClientIP(req);
+    const yanit = await sohbetDevamEttir(arac, gecmisMesajlar, yeniMesaj.trim(), kimlik);
+    return successResponse(res, { yanit, mesajSayisi: gecmisMesajlar.length + 1 }, 'Sohbet yanıtı alındı');
+  } catch {
+    return errorResponse(res, 'Sohbet yanıtı alınırken hata oluştu', 500);
+  }
+}));
+
+// ============ AI GİDER ANALİZİ ============
+
+/**
+ * POST /api/ai/gider-analiz
+ * Araç gider özetini Gemini ile analiz eder.
+ * Body: { arac: Arac, giderler: GiderOzeti[], toplamTutar: number, soru?: string }
+ */
+router.post('/ai/gider-analiz', asyncHandler(async (req: Request, res: Response) => {
+  const { arac, giderler, toplamTutar, soru } = req.body;
+
+  if (!arac || !arac.id) {
+    return errorResponse(res, 'Araç bilgisi eksik', 400);
+  }
+  if (!Array.isArray(giderler) || giderler.length === 0) {
+    return errorResponse(res, 'Gider verisi boş veya eksik', 400);
+  }
+
+  const giderListesi: GiderOzeti[] = giderler;
+  const toplam: number = typeof toplamTutar === 'number' ? toplamTutar : 0;
+
+  try {
+    const kimlik = getClientIP(req);
+    const analiz = await giderAnaliziYap(arac, giderListesi, toplam, kimlik, soru);
+    return successResponse(res, { analiz }, 'Gider analizi tamamlandı');
+  } catch {
+    return errorResponse(res, 'Gider analizi yapılırken hata oluştu', 500);
   }
 }));
 
